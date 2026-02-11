@@ -205,7 +205,7 @@ export default function HoursScreen() {
             <Checkbox
               status={item.selected ? 'checked' : 'unchecked'}
               onPress={() => toggleWorkerSelect(item.id)}
-              color="#FF9800"
+              color="#00897B"
             />
             <View>
               <Text variant="titleSmall" style={styles.workerName}>
@@ -265,7 +265,7 @@ export default function HoursScreen() {
             <Checkbox
               status={selectAll ? 'checked' : 'unchecked'}
               onPress={toggleSelectAll}
-              color="#FF9800"
+              color="#00897B"
             />
             <Text variant="titleSmall" style={styles.bulkTitle}>
               {t('hours.selectAll')}
@@ -292,7 +292,7 @@ export default function HoursScreen() {
             <Button
               mode="contained"
               onPress={applyBulkHours}
-              buttonColor="#FF9800"
+              buttonColor="#00897B"
               compact
               style={styles.applyButton}
             >
@@ -409,7 +409,7 @@ export default function HoursScreen() {
                     <Checkbox
                       status={editOvertime ? 'checked' : 'unchecked'}
                       onPress={() => setEditOvertime(!editOvertime)}
-                      color="#FF9800"
+                      color="#00897B"
                     />
                     <Text variant="bodyMedium">{t('hours.overtime')}</Text>
                   </View>
@@ -430,7 +430,7 @@ export default function HoursScreen() {
                 <Button mode="outlined" onPress={() => setEditModalVisible(false)} style={styles.modalButton}>
                   {t('common.cancel')}
                 </Button>
-                <Button mode="contained" onPress={handleSaveIndividual} style={styles.modalButton} buttonColor="#FF9800">
+                <Button mode="contained" onPress={handleSaveIndividual} style={styles.modalButton} buttonColor="#00897B">
                   {t('common.save')}
                 </Button>
               </View>
