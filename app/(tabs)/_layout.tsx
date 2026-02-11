@@ -8,26 +8,21 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#00897B',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: '#FF9800',
+        tabBarInactiveTintColor: '#757575',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderTopColor: '#F0F1F3',
+          borderTopColor: '#E0E0E0',
           height: 60,
           paddingBottom: 8,
           paddingTop: 4,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: '#00897B',
+          backgroundColor: '#FF9800',
         },
         headerTintColor: '#FFFFFF',
         headerTitleStyle: {
@@ -39,9 +34,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.dashboard'),
-          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="view-dashboard-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
           ),
         }}
       />
@@ -50,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.asphalt'),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="truck-delivery" size={size} color={color} />
+            <MaterialCommunityIcons name="truck" size={size} color={color} />
           ),
         }}
       />
@@ -59,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.materials'),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="ruler-square" size={size} color={color} />
+            <MaterialCommunityIcons name="ruler" size={size} color={color} />
           ),
         }}
       />
@@ -77,7 +71,7 @@ export default function TabLayout() {
         options={{
           title: t('tabs.vehicle'),
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="car-side" size={size} color={color} />
+            <MaterialCommunityIcons name="car" size={size} color={color} />
           ),
         }}
       />

@@ -16,7 +16,7 @@ export default function NotFoundScreen() {
       <Button
         mode="contained"
         onPress={() => router.replace('/')}
-        buttonColor="#00897B"
+        buttonColor="#FF9800"
         style={styles.button}
       >
         Go to Dashboard
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    color: '#00897B',
+    color: '#FF9800',
     marginBottom: 8,
   },
   subtitle: {
