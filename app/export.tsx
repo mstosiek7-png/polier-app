@@ -53,22 +53,22 @@ export default function ExportScreen() {
               <RadioButton.Item
                 label={t('export.today')}
                 value="today"
-                color="#FF9800"
+                color="#00897B"
               />
               <RadioButton.Item
                 label={t('export.yesterday')}
                 value="yesterday"
-                color="#FF9800"
+                color="#00897B"
               />
               <RadioButton.Item
                 label={t('export.thisWeek')}
                 value="week"
-                color="#FF9800"
+                color="#00897B"
               />
               <RadioButton.Item
                 label={t('export.custom')}
                 value="custom"
-                color="#FF9800"
+                color="#00897B"
               />
             </RadioButton.Group>
           </Card.Content>
@@ -84,25 +84,25 @@ export default function ExportScreen() {
               label={t('export.includeAsphalt')}
               status={includeAsphalt ? 'checked' : 'unchecked'}
               onPress={() => setIncludeAsphalt(!includeAsphalt)}
-              color="#FF9800"
+              color="#00897B"
             />
             <Checkbox.Item
               label={t('export.includeMaterials')}
               status={includeMaterials ? 'checked' : 'unchecked'}
               onPress={() => setIncludeMaterials(!includeMaterials)}
-              color="#FF9800"
+              color="#00897B"
             />
             <Checkbox.Item
               label={t('export.includeHours')}
               status={includeHours ? 'checked' : 'unchecked'}
               onPress={() => setIncludeHours(!includeHours)}
-              color="#FF9800"
+              color="#00897B"
             />
             <Checkbox.Item
               label={t('export.includeVehicle')}
               status={includeVehicle ? 'checked' : 'unchecked'}
               onPress={() => setIncludeVehicle(!includeVehicle)}
-              color="#FF9800"
+              color="#00897B"
             />
           </Card.Content>
         </Card>

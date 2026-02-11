@@ -174,7 +174,7 @@ export default function AsphaltScreen() {
       <Card.Content>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
-            <MaterialCommunityIcons name="file-document" size={18} color="#FF9800" />
+            <MaterialCommunityIcons name="file-document" size={18} color="#00897B" />
             <Text variant="titleSmall" style={styles.lieferscheinNumber}>
               #{item.lieferscheinNumber}
             </Text>
@@ -375,7 +375,7 @@ export default function AsphaltScreen() {
               mode="contained"
               onPress={handleSave}
               style={styles.modalButton}
-              buttonColor="#FF9800"
+              buttonColor="#00897B"
             >
               {t('common.save')}
             </Button>
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   lieferscheinNumber: {
     fontWeight: '700',
-    color: '#FF9800',
+    color: '#00897B',
   },
   cardActions: {
     flexDirection: 'row',
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     color: '#424242',
   },
   tons: {
-    color: '#FF9800',
+    color: '#00897B',
     fontWeight: 'bold',
   },
   driverInfo: {
@@ -483,14 +483,14 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   footerValue: {
-    color: '#FF9800',
+    color: '#00897B',
     fontWeight: 'bold',
   },
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 80,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#00897B',
     borderRadius: 16,
   },
   modal: {

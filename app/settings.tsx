@@ -165,12 +165,12 @@ export default function SettingsScreen() {
               <RadioButton.Item
                 label={t('settings.polish')}
                 value="pl"
-                color="#FF9800"
+                color="#00897B"
               />
               <RadioButton.Item
                 label={t('settings.german')}
                 value="de"
-                color="#FF9800"
+                color="#00897B"
               />
             </RadioButton.Group>
           </Card.Content>
@@ -185,7 +185,7 @@ export default function SettingsScreen() {
               </Text>
               <IconButton
                 icon="plus"
-                iconColor="#FF9800"
+                iconColor="#00897B"
                 size={20}
                 onPress={() => setProjectModalVisible(true)}
               />
@@ -200,7 +200,7 @@ export default function SettingsScreen() {
                     value={project.id}
                     status={project.active ? 'checked' : 'unchecked'}
                     onPress={() => handleSetActiveProject(project.id)}
-                    color="#FF9800"
+                    color="#00897B"
                   />
                 )}
                 style={styles.listItem}
@@ -218,7 +218,7 @@ export default function SettingsScreen() {
               </Text>
               <IconButton
                 icon="plus"
-                iconColor="#FF9800"
+                iconColor="#00897B"
                 size={20}
                 onPress={() => setWorkerModalVisible(true)}
               />
@@ -231,7 +231,7 @@ export default function SettingsScreen() {
                   <Switch
                     value={worker.active}
                     onValueChange={() => handleToggleWorker(worker)}
-                    color="#FF9800"
+                    color="#00897B"
                   />
                 )}
                 style={[
@@ -252,7 +252,7 @@ export default function SettingsScreen() {
               </Text>
               <IconButton
                 icon="plus"
-                iconColor="#FF9800"
+                iconColor="#00897B"
                 size={20}
                 onPress={() => setVehicleModalVisible(true)}
               />
@@ -309,7 +309,7 @@ export default function SettingsScreen() {
             <Button mode="outlined" onPress={() => setProjectModalVisible(false)}>
               {t('common.cancel')}
             </Button>
-            <Button mode="contained" onPress={handleAddProject} buttonColor="#FF9800">
+            <Button mode="contained" onPress={handleAddProject} buttonColor="#00897B">
               {t('common.save')}
             </Button>
           </View>
@@ -342,7 +342,7 @@ export default function SettingsScreen() {
             <Button mode="outlined" onPress={() => setWorkerModalVisible(false)}>
               {t('common.cancel')}
             </Button>
-            <Button mode="contained" onPress={handleAddWorker} buttonColor="#FF9800">
+            <Button mode="contained" onPress={handleAddWorker} buttonColor="#00897B">
               {t('common.save')}
             </Button>
           </View>
@@ -390,7 +390,7 @@ export default function SettingsScreen() {
             <Button mode="outlined" onPress={() => setVehicleModalVisible(false)}>
               {t('common.cancel')}
             </Button>
-            <Button mode="contained" onPress={handleAddVehicle} buttonColor="#FF9800">
+            <Button mode="contained" onPress={handleAddVehicle} buttonColor="#00897B">
               {t('common.save')}
             </Button>
           </View>

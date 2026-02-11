@@ -10,20 +10,20 @@ const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#FF9800',
-    primaryContainer: '#FFE0B2',
-    secondary: '#2196F3',
-    secondaryContainer: '#BBDEFB',
-    error: '#F44336',
-    errorContainer: '#FFCDD2',
-    background: '#F5F5F5',
+    primary: '#00897B',
+    primaryContainer: '#E0F2F1',
+    secondary: '#FF8A65',
+    secondaryContainer: '#FFF3E0',
+    error: '#EF5350',
+    errorContainer: '#FFEBEE',
+    background: '#F8F9FA',
     surface: '#FFFFFF',
-    surfaceVariant: '#F5F5F5',
+    surfaceVariant: '#F0F1F3',
     onPrimary: '#FFFFFF',
     onSecondary: '#FFFFFF',
-    onBackground: '#212121',
-    onSurface: '#212121',
-    outline: '#E0E0E0',
+    onBackground: '#1A1A2E',
+    onSurface: '#1A1A2E',
+    outline: '#E5E7EB',
   },
 };
 
@@ -63,7 +63,7 @@ export default function RootLayout() {
             options={{
               headerShown: true,
               title: 'Export',
-              headerStyle: { backgroundColor: '#FF9800' },
+              headerStyle: { backgroundColor: '#00897B' },
               headerTintColor: '#FFFFFF',
               presentation: 'modal',
             }}
@@ -73,7 +73,7 @@ export default function RootLayout() {
             options={{
               headerShown: true,
               title: 'Settings',
-              headerStyle: { backgroundColor: '#FF9800' },
+              headerStyle: { backgroundColor: '#00897B' },
               headerTintColor: '#FFFFFF',
               presentation: 'modal',
             }}
