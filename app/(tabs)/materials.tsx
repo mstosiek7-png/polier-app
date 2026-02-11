@@ -355,7 +355,7 @@ export default function MaterialsScreen() {
             <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalButton}>
               {t('common.cancel')}
             </Button>
-            <Button mode="contained" onPress={handleSave} style={styles.modalButton} buttonColor="#00897B">
+            <Button mode="contained" onPress={handleSave} style={styles.modalButton} buttonColor="#FF9800">
               {t('common.save')}
             </Button>
           </View>
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   footerLabel: { color: '#757575', marginBottom: 4 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   summaryItem: { color: '#2196F3', fontWeight: '600' },
-  fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#00897B', borderRadius: 16 },
+  fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#FF9800', borderRadius: 16 },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,

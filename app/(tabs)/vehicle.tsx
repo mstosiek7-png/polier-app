@@ -415,7 +415,7 @@ export default function VehicleScreen() {
             <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalButton}>
               {t('common.cancel')}
             </Button>
-            <Button mode="contained" onPress={handleSave} style={styles.modalButton} buttonColor="#00897B">
+            <Button mode="contained" onPress={handleSave} style={styles.modalButton} buttonColor="#FF9800">
               {t('common.save')}
             </Button>
           </View>
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   },
   footerLabel: { color: '#757575' },
   footerValue: { color: '#9C27B0', fontWeight: 'bold' },
-  fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#00897B', borderRadius: 16 },
+  fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#FF9800', borderRadius: 16 },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,

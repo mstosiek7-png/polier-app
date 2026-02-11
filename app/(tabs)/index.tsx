@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Dimensions } from 'react-native';
-import { Text, IconButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Card, Text, IconButton, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -14,9 +14,6 @@ import {
 } from '../../src/services/database';
 import type { Project } from '../../src/types';
 import { getTodayISO, formatNumber } from '../../src/utils/formatters';
-import { format } from 'date-fns';
-import { pl, de } from 'date-fns/locale';
-import { CARD_COLORS } from '../../src/utils/constants';
 
 interface DashboardStats {
   tons: number;
@@ -26,30 +23,8 @@ interface DashboardStats {
   km: number;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_GAP = 12;
-const HORIZONTAL_PADDING = 20;
-const CARD_SIZE = (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - CARD_GAP * 2) / 3;
-
-interface GridCardItem {
-  key: string;
-  labelKey: string;
-  icon: string;
-  colorScheme: keyof typeof CARD_COLORS;
-  route: string;
-}
-
-const GRID_ITEMS: GridCardItem[] = [
-  { key: 'asphalt', labelKey: 'dashboard.asphalt', icon: 'truck-delivery', colorScheme: 'teal', route: '/(tabs)/asphalt' },
-  { key: 'materials', labelKey: 'dashboard.materials', icon: 'ruler-square', colorScheme: 'orange', route: '/(tabs)/materials' },
-  { key: 'hours', labelKey: 'dashboard.hours', icon: 'account-group', colorScheme: 'coral', route: '/(tabs)/hours' },
-  { key: 'vehicle', labelKey: 'dashboard.vehicle', icon: 'car-side', colorScheme: 'purple', route: '/(tabs)/vehicle' },
-  { key: 'export', labelKey: 'dashboard.export', icon: 'file-chart-outline', colorScheme: 'blue', route: '/export' },
-  { key: 'settings', labelKey: 'dashboard.settings', icon: 'cog-outline', colorScheme: 'amber', route: '/settings' },
-];
-
 export default function DashboardScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
@@ -75,6 +50,11 @@ export default function DashboardScreen() {
           getTotalKm(activeProject.id, today),
         ]);
 
+        const materialsCount = Object.values(materialsSummary).reduce(
+          (sum, val) => sum + val,
+          0
+        );
+
         setStats({
           tons,
           materialsCount: Object.keys(materialsSummary).length,
@@ -98,284 +78,207 @@ export default function DashboardScreen() {
     setRefreshing(false);
   }, [loadData]);
 
-  const todayFormatted = format(new Date(), 'd MMMM yyyy', {
-    locale: i18n.language === 'de' ? de : pl,
-  });
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text variant="headlineSmall" style={styles.title}>
+        <View>
+          <Text variant="headlineMedium" style={styles.title}>
             {t('dashboard.title')}
           </Text>
-          <View style={styles.dateRow}>
-            <MaterialCommunityIcons name="calendar-today" size={14} color="#6B7280" />
-            <Text variant="bodySmall" style={styles.dateText}>
-              {t('common.today')}, {todayFormatted}
+          <Text variant="bodyMedium" style={styles.projectName}>
+            {project ? project.name : t('dashboard.noProject')}
+          </Text>
+          {project?.location && (
+            <Text variant="bodySmall" style={styles.location}>
+              {project.location}
             </Text>
-          </View>
+          )}
         </View>
-        <View style={styles.headerRight}>
+        <View style={styles.headerActions}>
           <IconButton
-            icon="bell-outline"
-            iconColor="#1A1A2E"
-            size={22}
-            style={styles.headerIcon}
-            onPress={() => {}}
+            icon="export-variant"
+            iconColor="#FF9800"
+            size={24}
+            onPress={() => router.push('/export')}
           />
           <IconButton
-            icon="cog-outline"
-            iconColor="#1A1A2E"
-            size={22}
-            style={styles.headerIcon}
+            icon="cog"
+            iconColor="#FF9800"
+            size={24}
             onPress={() => router.push('/settings')}
           />
         </View>
       </View>
 
-      {/* Project info */}
-      {project && (
-        <View style={styles.projectBar}>
-          <MaterialCommunityIcons name="map-marker" size={16} color="#00897B" />
-          <Text variant="bodyMedium" style={styles.projectName} numberOfLines={1}>
-            {project.name}
-          </Text>
-          {project.location && (
-            <Text variant="bodySmall" style={styles.projectLocation} numberOfLines={1}>
-              {' '}— {project.location}
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* Grid */}
       <ScrollView
-        style={styles.scrollView}
+        style={styles.content}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#00897B']}
+            colors={['#FF9800']}
           />
         }
       >
-        <View style={styles.grid}>
-          {GRID_ITEMS.map((item) => (
-            <GridCard
-              key={item.key}
-              item={item}
-              stats={stats}
-              onPress={() => router.push(item.route as any)}
-              t={t}
-            />
-          ))}
-        </View>
+        {/* Asphalt Card */}
+        <DashboardCard
+          title={t('dashboard.asphalt')}
+          subtitle={t('dashboard.asphaltToday', {
+            tons: formatNumber(stats.tons),
+          })}
+          icon="truck"
+          color="#FF9800"
+          onPress={() => router.push('/(tabs)/asphalt')}
+        />
 
-        {/* Summary bar */}
-        <View style={styles.summaryBar}>
-          <Text variant="titleSmall" style={styles.summaryTitle}>
-            {t('common.today')}
-          </Text>
-          <View style={styles.summaryRow}>
-            <SummaryChip icon="truck" value={`${formatNumber(stats.tons)} t`} color="#00897B" />
-            <SummaryChip icon="ruler" value={`${stats.materialsCount}`} color="#FF8A65" />
-            <SummaryChip icon="account" value={`${stats.workersCount}`} color="#EF5350" />
-            <SummaryChip icon="road-variant" value={`${formatNumber(stats.km, 0)} km`} color="#7E57C2" />
-          </View>
-        </View>
+        {/* Materials Card */}
+        <DashboardCard
+          title={t('dashboard.materials')}
+          subtitle={t('dashboard.materialsToday', {
+            count: stats.materialsCount,
+          })}
+          icon="ruler"
+          color="#2196F3"
+          onPress={() => router.push('/(tabs)/materials')}
+        />
+
+        {/* Worker Hours Card */}
+        <DashboardCard
+          title={t('dashboard.hours')}
+          subtitle={t('dashboard.hoursToday', {
+            workers: stats.workersCount,
+            hours: formatNumber(stats.hours),
+          })}
+          icon="account-group"
+          color="#4CAF50"
+          onPress={() => router.push('/(tabs)/hours')}
+        />
+
+        {/* Vehicle Card */}
+        <DashboardCard
+          title={t('dashboard.vehicle')}
+          subtitle={t('dashboard.vehicleToday', {
+            km: formatNumber(stats.km, 0),
+          })}
+          icon="car"
+          color="#9C27B0"
+          onPress={() => router.push('/(tabs)/vehicle')}
+        />
+
+        {/* Export Card */}
+        <DashboardCard
+          title={t('dashboard.export')}
+          subtitle=""
+          icon="file-chart"
+          color="#607D8B"
+          onPress={() => router.push('/export')}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-interface GridCardProps {
-  item: GridCardItem;
-  stats: DashboardStats;
-  onPress: () => void;
-  t: (key: string) => string;
-}
-
-function GridCard({ item, onPress, t }: GridCardProps) {
-  const colors = CARD_COLORS[item.colorScheme];
-
-  return (
-    <View style={styles.cardWrapper}>
-      <View style={styles.card}>
-        <View
-          style={[styles.cardTouchable]}
-          onTouchEnd={onPress}
-        >
-          <View style={[styles.cardIconArea, { backgroundColor: colors.bg }]}>
-            <MaterialCommunityIcons
-              name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-              size={36}
-              color={colors.icon}
-            />
-          </View>
-          <Text variant="labelMedium" style={styles.cardLabel} numberOfLines={2}>
-            {t(item.labelKey)}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-interface SummaryChipProps {
+interface DashboardCardProps {
+  title: string;
+  subtitle: string;
   icon: string;
-  value: string;
   color: string;
+  onPress: () => void;
 }
 
-function SummaryChip({ icon, value, color }: SummaryChipProps) {
+function DashboardCard({ title, subtitle, icon, color, onPress }: DashboardCardProps) {
   return (
-    <View style={styles.summaryChip}>
-      <MaterialCommunityIcons
-        name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
-        size={16}
-        color={color}
-      />
-      <Text variant="labelMedium" style={[styles.summaryValue, { color }]}>
-        {value}
-      </Text>
-    </View>
+    <Card mode="elevated" onPress={onPress} style={styles.card}>
+      <Card.Content style={styles.cardContent}>
+        <Surface style={[styles.iconContainer, { backgroundColor: color + '15' }]} elevation={0}>
+          <MaterialCommunityIcons
+            name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
+            size={28}
+            color={color}
+          />
+        </Surface>
+        <View style={styles.cardText}>
+          <Text variant="titleMedium" style={styles.cardTitle}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text variant="bodyMedium" style={styles.cardSubtitle}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+        <MaterialCommunityIcons name="chevron-right" size={24} color="#BDBDBD" />
+      </Card.Content>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F5F5F5',
   },
   header: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: HORIZONTAL_PADDING,
-    paddingTop: 8,
-    paddingBottom: 4,
-    backgroundColor: '#FFFFFF',
-  },
-  headerLeft: {
-    flex: 1,
+    alignItems: 'flex-start',
   },
   title: {
-    color: '#1A1A2E',
-    fontWeight: '700',
-    fontSize: 22,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  dateText: {
-    color: '#6B7280',
-    fontSize: 13,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    margin: 0,
-  },
-  projectBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: HORIZONTAL_PADDING,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F1F3',
-    gap: 6,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   projectName: {
-    color: '#1A1A2E',
-    fontWeight: '600',
-    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginTop: 4,
   },
-  projectLocation: {
-    color: '#6B7280',
-    fontSize: 13,
-    flexShrink: 1,
+  location: {
+    color: '#FFFFFF',
+    opacity: 0.7,
+    marginTop: 2,
   },
-  scrollView: {
+  headerActions: {
+    flexDirection: 'row',
+  },
+  content: {
     flex: 1,
   },
   scrollContent: {
-    padding: HORIZONTAL_PADDING,
-    paddingTop: 20,
+    padding: 16,
     paddingBottom: 32,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: CARD_GAP,
-  },
-  cardWrapper: {
-    width: CARD_SIZE,
-  },
   card: {
+    marginBottom: 12,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 12,
   },
-  cardTouchable: {
+  cardContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
-  cardIconArea: {
-    width: CARD_SIZE - 24,
-    height: CARD_SIZE - 40,
-    borderRadius: 14,
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardLabel: {
-    color: '#1A1A2E',
+  cardText: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  cardTitle: {
     fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 8,
-    fontSize: 11,
-    lineHeight: 14,
+    color: '#212121',
   },
-  summaryBar: {
-    marginTop: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  summaryTitle: {
-    color: '#1A1A2E',
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  summaryChip: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  summaryValue: {
-    fontWeight: '700',
-    fontSize: 13,
+  cardSubtitle: {
+    color: '#757575',
+    marginTop: 2,
   },
 });
