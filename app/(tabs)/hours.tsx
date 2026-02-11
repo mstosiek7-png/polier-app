@@ -112,16 +112,31 @@ export default function HoursScreen() {
   };
 
   const applyBulkHours = async () => {
-    if (!project) return;
+    if (!project) {
+      Alert.alert('Blad', 'Brak aktywnego projektu');
+      return;
+    }
     const selectedWorkers = workersWithHours.filter((w) => w.selected);
-    if (selectedWorkers.length === 0) return;
+    if (selectedWorkers.length === 0) {
+      Alert.alert('Brak wyboru', 'Zaznacz pracownikow');
+      return;
+    }
+
+    if (!bulkStart || !bulkEnd) {
+      Alert.alert('Brak godzin', 'Wypelnij godziny rozpoczecia i zakonczenia');
+      return;
+    }
 
     try {
+      console.log('Zapisuje godziny dla', selectedWorkers.length, 'pracownikow...');
       const today = getTodayISO();
       const breakH = DEFAULT_BREAK_HOURS;
       const total = calculateHours(bulkStart, bulkEnd, breakH);
 
+      console.log('Dane:', { bulkStart, bulkEnd, breakH, total, today });
+
       for (const worker of selectedWorkers) {
+        console.log('Zapisuje godziny dla:', worker.firstName, worker.lastName);
         await upsertWorkerHours({
           workerId: worker.id,
           projectId: project.id,
@@ -137,9 +152,11 @@ export default function HoursScreen() {
 
       await loadData();
       setSnackbar(t('common.success'));
+      console.log('Godziny zapisane dla', selectedWorkers.length, 'pracownikow');
     } catch (error) {
-      console.error('Error applying bulk hours:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad zapisu godzin:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac godzin';
+      Alert.alert('Blad zapisu', message);
     }
   };
 
@@ -155,11 +172,34 @@ export default function HoursScreen() {
   };
 
   const handleSaveIndividual = async () => {
-    if (!project || !editingWorker) return;
+    if (!project) {
+      Alert.alert('Blad', 'Brak aktywnego projektu');
+      return;
+    }
+    if (!editingWorker) {
+      Alert.alert('Blad', 'Nie wybrano pracownika');
+      return;
+    }
+
+    if (editStatus === 'present' && (!editStart || !editEnd)) {
+      Alert.alert('Brak godzin', 'Wypelnij godziny rozpoczecia i zakonczenia');
+      return;
+    }
 
     try {
+      console.log('Zapisuje godziny dla:', editingWorker.firstName, editingWorker.lastName);
       const breakH = parseFloat(editBreak.replace(',', '.')) || DEFAULT_BREAK_HOURS;
       const total = editStatus === 'present' ? calculateHours(editStart, editEnd, breakH) : 0;
+
+      console.log('Dane:', {
+        workerId: editingWorker.id,
+        date: getTodayISO(),
+        startTime: editStart,
+        endTime: editEnd,
+        breakHours: breakH,
+        totalHours: total,
+        status: editStatus,
+      });
 
       await upsertWorkerHours({
         workerId: editingWorker.id,
@@ -177,9 +217,11 @@ export default function HoursScreen() {
       setEditModalVisible(false);
       await loadData();
       setSnackbar(t('common.success'));
+      console.log('Godziny zapisane');
     } catch (error) {
-      console.error('Error saving hours:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad zapisu godzin:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac godzin';
+      Alert.alert('Blad zapisu', message);
     }
   };
 

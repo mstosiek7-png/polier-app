@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, Text, IconButton, Surface } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Dimensions } from 'react-native';
+import { Card, Text, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -17,7 +17,7 @@ import { getTodayISO, formatNumber } from '../../src/utils/formatters';
 
 interface DashboardStats {
   tons: number;
-  materialsCount: number;
+  materialsTotal: number;
   workersCount: number;
   hours: number;
   km: number;
@@ -29,7 +29,7 @@ export default function DashboardScreen() {
   const [project, setProject] = useState<Project | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     tons: 0,
-    materialsCount: 0,
+    materialsTotal: 0,
     workersCount: 0,
     hours: 0,
     km: 0,
@@ -50,14 +50,14 @@ export default function DashboardScreen() {
           getTotalKm(activeProject.id, today),
         ]);
 
-        const materialsCount = Object.values(materialsSummary).reduce(
+        const materialsTotal = Object.values(materialsSummary).reduce(
           (sum, val) => sum + val,
           0
         );
 
         setStats({
           tons,
-          materialsCount: Object.keys(materialsSummary).length,
+          materialsTotal,
           workersCount: hoursData.workersCount,
           hours: hoursData.totalHours,
           km,
@@ -78,12 +78,69 @@ export default function DashboardScreen() {
     setRefreshing(false);
   }, [loadData]);
 
+  const tiles = [
+    {
+      id: 1,
+      title: 'Asfalt',
+      subtitle: 'Lieferschein',
+      icon: 'truck' as const,
+      screen: '/(tabs)/asphalt',
+      info: `${t('dashboard.today', 'Dzisiaj')}: ${formatNumber(stats.tons)} t`,
+      color: '#FF9800',
+    },
+    {
+      id: 2,
+      title: t('tabs.materials', 'Materialy'),
+      subtitle: 'Metry biezace',
+      icon: 'tape-measure' as const,
+      screen: '/(tabs)/materials',
+      info: `${t('dashboard.today', 'Dzisiaj')}: ${formatNumber(stats.materialsTotal, 0)} MB`,
+      color: '#2196F3',
+    },
+    {
+      id: 3,
+      title: t('tabs.hours', 'Godziny'),
+      subtitle: t('hours.workers', 'Pracownicy'),
+      icon: 'clock-outline' as const,
+      screen: '/(tabs)/hours',
+      info: `${t('dashboard.today', 'Dzisiaj')}: ${formatNumber(stats.hours)} h`,
+      color: '#4CAF50',
+    },
+    {
+      id: 4,
+      title: t('vehicle.title', 'Kilometrowka'),
+      subtitle: 'Bus',
+      icon: 'car' as const,
+      screen: '/(tabs)/vehicle',
+      info: `${t('dashboard.today', 'Dzisiaj')}: ${formatNumber(stats.km, 0)} km`,
+      color: '#9C27B0',
+    },
+    {
+      id: 5,
+      title: 'Kalkulator',
+      subtitle: 'Asfaltu',
+      icon: 'calculator' as const,
+      screen: '/(tabs)/calculator',
+      info: '',
+      color: '#607D8B',
+    },
+    {
+      id: 6,
+      title: 'Raport',
+      subtitle: 'Eksport',
+      icon: 'file-document' as const,
+      screen: '/export',
+      info: '',
+      color: '#795548',
+    },
+  ];
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerTextContainer}>
           <Text variant="headlineMedium" style={styles.title}>
-            {t('dashboard.title')}
+            Polier App
           </Text>
           <Text variant="bodyMedium" style={styles.projectName}>
             {project ? project.name : t('dashboard.noProject')}
@@ -94,20 +151,12 @@ export default function DashboardScreen() {
             </Text>
           )}
         </View>
-        <View style={styles.headerActions}>
-          <IconButton
-            icon="export-variant"
-            iconColor="#FF9800"
-            size={24}
-            onPress={() => router.push('/export')}
-          />
-          <IconButton
-            icon="cog"
-            iconColor="#FF9800"
-            size={24}
-            onPress={() => router.push('/settings')}
-          />
-        </View>
+        <IconButton
+          icon="cog"
+          iconColor="#FFFFFF"
+          size={24}
+          onPress={() => router.push('/settings')}
+        />
       </View>
 
       <ScrollView
@@ -121,96 +170,39 @@ export default function DashboardScreen() {
           />
         }
       >
-        {/* Asphalt Card */}
-        <DashboardCard
-          title={t('dashboard.asphalt')}
-          subtitle={t('dashboard.asphaltToday', {
-            tons: formatNumber(stats.tons),
-          })}
-          icon="truck"
-          color="#FF9800"
-          onPress={() => router.push('/(tabs)/asphalt')}
-        />
-
-        {/* Materials Card */}
-        <DashboardCard
-          title={t('dashboard.materials')}
-          subtitle={t('dashboard.materialsToday', {
-            count: stats.materialsCount,
-          })}
-          icon="ruler"
-          color="#2196F3"
-          onPress={() => router.push('/(tabs)/materials')}
-        />
-
-        {/* Worker Hours Card */}
-        <DashboardCard
-          title={t('dashboard.hours')}
-          subtitle={t('dashboard.hoursToday', {
-            workers: stats.workersCount,
-            hours: formatNumber(stats.hours),
-          })}
-          icon="account-group"
-          color="#4CAF50"
-          onPress={() => router.push('/(tabs)/hours')}
-        />
-
-        {/* Vehicle Card */}
-        <DashboardCard
-          title={t('dashboard.vehicle')}
-          subtitle={t('dashboard.vehicleToday', {
-            km: formatNumber(stats.km, 0),
-          })}
-          icon="car"
-          color="#9C27B0"
-          onPress={() => router.push('/(tabs)/vehicle')}
-        />
-
-        {/* Export Card */}
-        <DashboardCard
-          title={t('dashboard.export')}
-          subtitle=""
-          icon="file-chart"
-          color="#607D8B"
-          onPress={() => router.push('/export')}
-        />
+        <View style={styles.grid}>
+          {tiles.map((tile) => (
+            <TouchableOpacity
+              key={tile.id}
+              style={styles.tileWrapper}
+              onPress={() => router.push(tile.screen as any)}
+              activeOpacity={0.7}
+            >
+              <Card style={styles.tile} mode="elevated">
+                <Card.Content style={styles.tileContent}>
+                  <MaterialCommunityIcons
+                    name={tile.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                    size={48}
+                    color={tile.color}
+                  />
+                  <Text variant="titleLarge" style={styles.tileTitle}>
+                    {tile.title}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.tileSubtitle}>
+                    {tile.subtitle}
+                  </Text>
+                  {tile.info ? (
+                    <Text variant="bodySmall" style={styles.tileInfo}>
+                      {tile.info}
+                    </Text>
+                  ) : null}
+                </Card.Content>
+              </Card>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-interface DashboardCardProps {
-  title: string;
-  subtitle: string;
-  icon: string;
-  color: string;
-  onPress: () => void;
-}
-
-function DashboardCard({ title, subtitle, icon, color, onPress }: DashboardCardProps) {
-  return (
-    <Card mode="elevated" onPress={onPress} style={styles.card}>
-      <Card.Content style={styles.cardContent}>
-        <Surface style={[styles.iconContainer, { backgroundColor: color + '15' }]} elevation={0}>
-          <MaterialCommunityIcons
-            name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
-            size={28}
-            color={color}
-          />
-        </Surface>
-        <View style={styles.cardText}>
-          <Text variant="titleMedium" style={styles.cardTitle}>
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text variant="bodyMedium" style={styles.cardSubtitle}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        <MaterialCommunityIcons name="chevron-right" size={24} color="#BDBDBD" />
-      </Card.Content>
-    </Card>
   );
 }
 
@@ -228,6 +220,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  headerTextContainer: {
+    flex: 1,
+  },
   title: {
     color: '#FFFFFF',
     fontWeight: 'bold',
@@ -242,43 +237,47 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 2,
   },
-  headerActions: {
-    flexDirection: 'row',
-  },
   content: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: 8,
     paddingBottom: 32,
   },
-  card: {
-    marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-  },
-  cardContent: {
+  grid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
+    flexWrap: 'wrap',
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  tileWrapper: {
+    width: '50%',
+    padding: 8,
+  },
+  tile: {
+    height: 180,
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+  },
+  tileContent: {
     alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
-  cardText: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  cardTitle: {
-    fontWeight: '600',
+  tileTitle: {
+    marginTop: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
     color: '#212121',
   },
-  cardSubtitle: {
-    color: '#757575',
-    marginTop: 2,
+  tileSubtitle: {
+    marginTop: 4,
+    color: '#666',
+    textAlign: 'center',
+  },
+  tileInfo: {
+    marginTop: 8,
+    color: '#999',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

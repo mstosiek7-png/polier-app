@@ -118,24 +118,45 @@ export default function VehicleScreen() {
   };
 
   const handleSave = async () => {
-    if (!project || !vehicle) return;
+    if (!project) {
+      Alert.alert('Blad', 'Brak aktywnego projektu');
+      return;
+    }
+    if (!vehicle) {
+      Alert.alert('Blad', 'Brak aktywnego pojazdu. Dodaj pojazd w Ustawieniach.');
+      return;
+    }
+
+    if (!formFrom.trim()) {
+      Alert.alert('Brak trasy', 'Podaj miejsce startu');
+      return;
+    }
+    if (!formTo.trim()) {
+      Alert.alert('Brak trasy', 'Podaj miejsce docelowe');
+      return;
+    }
 
     const startOdo = parseFloat(formStartOdo);
     const endOdo = parseFloat(formEndOdo);
 
-    if (!formFrom.trim() || !formTo.trim() || isNaN(startOdo) || isNaN(endOdo)) {
-      setSnackbar(t('common.error'));
+    if (isNaN(startOdo)) {
+      Alert.alert('Brak licznika', 'Podaj stan licznika na starcie');
       return;
     }
-
+    if (isNaN(endOdo)) {
+      Alert.alert('Brak licznika', 'Podaj stan licznika na koncu');
+      return;
+    }
     if (endOdo <= startOdo) {
-      setSnackbar(t('common.error'));
+      Alert.alert('Bledny licznik', 'Licznik koncowy musi byc wiekszy od poczatkowego');
       return;
     }
 
     const distance = endOdo - startOdo;
 
     try {
+      console.log('Zapisuje przejazd:', { from: formFrom, to: formTo, distance });
+
       if (editingTrip) {
         await updateTrip(editingTrip.id, {
           startTime: formStartTime,
@@ -168,9 +189,11 @@ export default function VehicleScreen() {
       resetForm();
       await loadData();
       setSnackbar(t('common.success'));
+      console.log('Przejazd zapisany');
     } catch (error) {
-      console.error('Error saving trip:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad zapisu przejazdu:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac';
+      Alert.alert('Blad zapisu', message);
     }
   };
 
@@ -186,7 +209,9 @@ export default function VehicleScreen() {
             await loadData();
             setSnackbar(t('common.success'));
           } catch (error) {
-            console.error('Error deleting trip:', error);
+            console.error('Blad usuwania przejazdu:', error);
+            const message = error instanceof Error ? error.message : 'Nie udalo sie usunac';
+            Alert.alert('Blad', message);
           }
         },
       },

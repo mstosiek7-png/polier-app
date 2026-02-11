@@ -102,19 +102,35 @@ export default function AsphaltScreen() {
   };
 
   const handleSave = async () => {
-    if (!project) return;
-    if (!formNumber.trim() || !formTons.trim()) {
-      setSnackbar(t('common.error'));
+    if (!project) {
+      Alert.alert('Blad', 'Brak aktywnego projektu');
+      return;
+    }
+
+    if (!formNumber.trim()) {
+      Alert.alert('Brak numeru', 'Podaj numer Lieferschein');
+      return;
+    }
+
+    if (!formClass) {
+      Alert.alert('Brak klasy', 'Wybierz klase asfaltu');
+      return;
+    }
+
+    if (!formTons.trim()) {
+      Alert.alert('Brak ilosci', 'Podaj ilosc ton');
       return;
     }
 
     const tons = parseFloat(formTons.replace(',', '.'));
     if (isNaN(tons) || tons <= 0) {
-      setSnackbar(t('common.error'));
+      Alert.alert('Bledna ilosc', 'Podaj ilosc ton (wieksza od 0)');
       return;
     }
 
     try {
+      console.log('Zapisuje Lieferschein:', { number: formNumber, class: formClass, tons });
+
       if (editingDelivery) {
         await updateAsphaltDelivery(editingDelivery.id, {
           lieferscheinNumber: formNumber.trim(),
@@ -125,7 +141,6 @@ export default function AsphaltScreen() {
           time: formTime,
           notes: formNotes.trim() || undefined,
         });
-        setSnackbar(t('common.success'));
       } else {
         await createAsphaltDelivery({
           projectId: project.id,
@@ -138,14 +153,16 @@ export default function AsphaltScreen() {
           truckNumber: formTruck.trim() || undefined,
           notes: formNotes.trim() || undefined,
         });
-        setSnackbar(t('common.success'));
       }
       setModalVisible(false);
       resetForm();
       await loadData();
+      setSnackbar(t('common.success'));
+      console.log('Lieferschein zapisany');
     } catch (error) {
-      console.error('Error saving delivery:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad zapisu Lieferschein:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac';
+      Alert.alert('Blad zapisu', message);
     }
   };
 
@@ -161,8 +178,9 @@ export default function AsphaltScreen() {
             await loadData();
             setSnackbar(t('common.success'));
           } catch (error) {
-            console.error('Error deleting delivery:', error);
-            setSnackbar(t('common.error'));
+            console.error('Blad usuwania dostawy:', error);
+            const message = error instanceof Error ? error.message : 'Nie udalo sie usunac';
+            Alert.alert('Blad', message);
           }
         },
       },

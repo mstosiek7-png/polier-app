@@ -79,7 +79,10 @@ export default function SettingsScreen() {
 
   // Project handlers
   const handleAddProject = async () => {
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim()) {
+      Alert.alert('Blad', 'Podaj nazwe projektu');
+      return;
+    }
     try {
       await createProject(newProjectName.trim(), newProjectLocation.trim() || undefined);
       setProjectModalVisible(false);
@@ -88,8 +91,9 @@ export default function SettingsScreen() {
       await loadData();
       setSnackbar(t('common.success'));
     } catch (error) {
-      console.error('Error creating project:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad tworzenia projektu:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie utworzyc projektu';
+      Alert.alert('Blad', message);
     }
   };
 
@@ -105,7 +109,14 @@ export default function SettingsScreen() {
 
   // Worker handlers
   const handleAddWorker = async () => {
-    if (!newFirstName.trim() || !newLastName.trim()) return;
+    if (!newFirstName.trim()) {
+      Alert.alert('Blad', 'Podaj imie pracownika');
+      return;
+    }
+    if (!newLastName.trim()) {
+      Alert.alert('Blad', 'Podaj nazwisko pracownika');
+      return;
+    }
     try {
       await createWorker(newFirstName.trim(), newLastName.trim());
       setWorkerModalVisible(false);
@@ -114,8 +125,9 @@ export default function SettingsScreen() {
       await loadData();
       setSnackbar(t('common.success'));
     } catch (error) {
-      console.error('Error creating worker:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad dodawania pracownika:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie dodac pracownika';
+      Alert.alert('Blad', message);
     }
   };
 
@@ -130,7 +142,18 @@ export default function SettingsScreen() {
 
   // Vehicle handlers
   const handleAddVehicle = async () => {
-    if (!newVehicleMake.trim() || !newVehicleModel.trim() || !newVehicleReg.trim()) return;
+    if (!newVehicleMake.trim()) {
+      Alert.alert('Blad', 'Podaj marke pojazdu');
+      return;
+    }
+    if (!newVehicleModel.trim()) {
+      Alert.alert('Blad', 'Podaj model pojazdu');
+      return;
+    }
+    if (!newVehicleReg.trim()) {
+      Alert.alert('Blad', 'Podaj numer rejestracyjny');
+      return;
+    }
     const odo = parseFloat(newVehicleOdo) || 0;
     try {
       await createVehicle(
@@ -147,8 +170,9 @@ export default function SettingsScreen() {
       await loadData();
       setSnackbar(t('common.success'));
     } catch (error) {
-      console.error('Error creating vehicle:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad dodawania pojazdu:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie dodac pojazdu';
+      Alert.alert('Blad', message);
     }
   };
 

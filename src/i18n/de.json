@@ -132,6 +132,8 @@
     "yesterday": "Gestern",
     "thisWeek": "Diese Woche",
     "custom": "Benutzerdefiniert",
+    "dateFrom": "Von",
+    "dateTo": "Bis",
     "include": "Einbeziehen",
     "includeAsphalt": "Asphaltlieferungen",
     "includeMaterials": "Materialien",
@@ -140,7 +142,12 @@
     "generatePdf": "PDF erstellen",
     "generateExcel": "Excel erstellen",
     "sendWhatsapp": "An WhatsApp senden",
-    "preview": "Vorschau"
+    "preview": "Vorschau",
+    "generating": "Bericht wird erstellt...",
+    "error": "Exportfehler",
+    "noSectionSelected": "Wählen Sie mindestens einen Abschnitt zum Exportieren",
+    "noProject": "Kein aktives Projekt. Wählen Sie ein Projekt in den Einstellungen.",
+    "exportError": "Bericht konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
   },
   "settings": {
     "title": "Einstellungen",

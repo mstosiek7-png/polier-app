@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import type {
   Project,
   AsphaltDelivery,
@@ -57,8 +57,8 @@ export async function initializeDatabase(): Promise<void> {
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
       type TEXT NOT NULL,
-      from_km TEXT NOT NULL,
-      to_km TEXT NOT NULL,
+      from_km TEXT DEFAULT '',
+      to_km TEXT DEFAULT '',
       meters REAL NOT NULL,
       date TEXT NOT NULL,
       time TEXT NOT NULL,
@@ -154,7 +154,7 @@ export async function getAllProjects(): Promise<Project[]> {
 
 export async function createProject(name: string, location?: string): Promise<Project> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     'INSERT INTO projects (id, name, location, active, created_at, updated_at) VALUES (?, ?, ?, 1, ?, ?)',
@@ -199,7 +199,7 @@ export async function getAsphaltDeliveries(projectId: string, date: string): Pro
 
 export async function createAsphaltDelivery(delivery: Omit<AsphaltDelivery, 'id' | 'createdAt' | 'updatedAt'>): Promise<AsphaltDelivery> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     `INSERT INTO asphalt_deliveries (id, project_id, lieferschein_number, date, time, asphalt_class, tons, driver, truck_number, notes, image_uri, created_at, updated_at)
@@ -263,12 +263,12 @@ export async function getMaterials(projectId: string, date: string): Promise<Mat
 
 export async function createMaterial(material: Omit<Material, 'id' | 'createdAt'>): Promise<Material> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     `INSERT INTO materials (id, project_id, type, from_km, to_km, meters, date, time, notes, image_uri, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, material.projectId, material.type, material.fromKm, material.toKm,
+     VALUES (?, ?, ?, '', '', ?, ?, ?, ?, ?, ?)`,
+    [id, material.projectId, material.type,
      material.meters, material.date, material.time, material.notes ?? null, material.imageUri ?? null, now]
   );
   return { ...material, id, createdAt: now };
@@ -280,8 +280,6 @@ export async function updateMaterial(id: string, material: Partial<Material>): P
   const values: (string | number | null)[] = [];
 
   if (material.type !== undefined) { fields.push('type = ?'); values.push(material.type); }
-  if (material.fromKm !== undefined) { fields.push('from_km = ?'); values.push(material.fromKm); }
-  if (material.toKm !== undefined) { fields.push('to_km = ?'); values.push(material.toKm); }
   if (material.meters !== undefined) { fields.push('meters = ?'); values.push(material.meters); }
   if (material.notes !== undefined) { fields.push('notes = ?'); values.push(material.notes ?? null); }
 
@@ -331,7 +329,7 @@ export async function getAllWorkers(): Promise<Worker[]> {
 
 export async function createWorker(firstName: string, lastName: string): Promise<Worker> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     'INSERT INTO workers (id, first_name, last_name, active, created_at) VALUES (?, ?, ?, 1, ?)',
@@ -373,7 +371,7 @@ export async function upsertWorkerHours(hours: Omit<WorkerHours, 'id' | 'created
     );
     return { ...hours, id: existing.id, createdAt: now };
   } else {
-    const id = uuidv4();
+    const id = Crypto.randomUUID();
     await database.runAsync(
       `INSERT INTO worker_hours (id, worker_id, project_id, date, start_time, end_time, break_hours, total_hours, status, overtime, notes, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -423,7 +421,7 @@ export async function getAllVehicles(): Promise<Vehicle[]> {
 
 export async function createVehicle(make: string, model: string, registrationNumber: string, currentOdometer: number): Promise<Vehicle> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     'INSERT INTO vehicles (id, make, model, registration_number, current_odometer, active, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
@@ -452,7 +450,7 @@ export async function getTrips(projectId: string, date: string): Promise<Trip[]>
 
 export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt'>): Promise<Trip> {
   const database = await getDatabase();
-  const id = uuidv4();
+  const id = Crypto.randomUUID();
   const now = new Date().toISOString();
   await database.runAsync(
     `INSERT INTO trips (id, vehicle_id, project_id, date, start_time, end_time, from_location, to_location, start_odometer, end_odometer, distance, purpose, notes, created_at)
@@ -513,6 +511,90 @@ export async function getLastOdometer(vehicleId: string): Promise<number> {
     [vehicleId]
   );
   return vehicle?.current_odometer ?? 0;
+}
+
+// ==================== DATE RANGE QUERIES (for export) ====================
+
+export async function getAsphaltDeliveriesRange(projectId: string, dateFrom: string, dateTo: string): Promise<AsphaltDelivery[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; project_id: string; lieferschein_number: string;
+    date: string; time: string; asphalt_class: string; tons: number;
+    driver: string | null; truck_number: string | null; notes: string | null;
+    image_uri: string | null; created_at: string; updated_at: string;
+  }>('SELECT * FROM asphalt_deliveries WHERE project_id = ? AND date BETWEEN ? AND ? ORDER BY date, time', [projectId, dateFrom, dateTo]);
+  return rows.map(mapAsphaltDelivery);
+}
+
+export async function getTotalTonsRange(projectId: string, dateFrom: string, dateTo: string): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.getFirstAsync<{ total: number | null }>(
+    'SELECT SUM(tons) as total FROM asphalt_deliveries WHERE project_id = ? AND date BETWEEN ? AND ?',
+    [projectId, dateFrom, dateTo]
+  );
+  return result?.total ?? 0;
+}
+
+export async function getMaterialsRange(projectId: string, dateFrom: string, dateTo: string): Promise<Material[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; project_id: string; type: string;
+    from_km: string; to_km: string; meters: number;
+    date: string; time: string; notes: string | null;
+    image_uri: string | null; created_at: string;
+  }>('SELECT * FROM materials WHERE project_id = ? AND date BETWEEN ? AND ? ORDER BY date, time', [projectId, dateFrom, dateTo]);
+  return rows.map(mapMaterial);
+}
+
+export async function getMaterialsSummaryRange(projectId: string, dateFrom: string, dateTo: string): Promise<Record<string, number>> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{ type: string; total: number }>(
+    'SELECT type, SUM(meters) as total FROM materials WHERE project_id = ? AND date BETWEEN ? AND ? GROUP BY type',
+    [projectId, dateFrom, dateTo]
+  );
+  const summary: Record<string, number> = {};
+  for (const row of rows) { summary[row.type] = row.total; }
+  return summary;
+}
+
+export async function getWorkerHoursRange(projectId: string, dateFrom: string, dateTo: string): Promise<WorkerHours[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; worker_id: string; project_id: string; date: string;
+    start_time: string; end_time: string; break_hours: number;
+    total_hours: number; status: string; overtime: number;
+    notes: string | null; created_at: string;
+  }>('SELECT * FROM worker_hours WHERE project_id = ? AND date BETWEEN ? AND ? ORDER BY date, created_at', [projectId, dateFrom, dateTo]);
+  return rows.map(mapWorkerHours);
+}
+
+export async function getTotalHoursRange(projectId: string, dateFrom: string, dateTo: string): Promise<{ totalHours: number; workersCount: number }> {
+  const database = await getDatabase();
+  const result = await database.getFirstAsync<{ total: number | null; count: number }>(
+    `SELECT SUM(total_hours) as total, COUNT(DISTINCT worker_id) as count FROM worker_hours WHERE project_id = ? AND date BETWEEN ? AND ? AND status = 'present'`,
+    [projectId, dateFrom, dateTo]
+  );
+  return { totalHours: result?.total ?? 0, workersCount: result?.count ?? 0 };
+}
+
+export async function getTripsRange(projectId: string, dateFrom: string, dateTo: string): Promise<Trip[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; vehicle_id: string; project_id: string; date: string;
+    start_time: string; end_time: string; from_location: string;
+    to_location: string; start_odometer: number; end_odometer: number;
+    distance: number; purpose: string | null; notes: string | null; created_at: string;
+  }>('SELECT * FROM trips WHERE project_id = ? AND date BETWEEN ? AND ? ORDER BY date, start_time', [projectId, dateFrom, dateTo]);
+  return rows.map(mapTrip);
+}
+
+export async function getTotalKmRange(projectId: string, dateFrom: string, dateTo: string): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.getFirstAsync<{ total: number | null }>(
+    'SELECT SUM(distance) as total FROM trips WHERE project_id = ? AND date BETWEEN ? AND ?',
+    [projectId, dateFrom, dateTo]
+  );
+  return result?.total ?? 0;
 }
 
 // ==================== SEED DATA ====================
@@ -631,8 +713,6 @@ function mapMaterial(row: {
     id: row.id,
     projectId: row.project_id,
     type: row.type,
-    fromKm: row.from_km,
-    toKm: row.to_km,
     meters: row.meters,
     date: row.date,
     time: row.time,

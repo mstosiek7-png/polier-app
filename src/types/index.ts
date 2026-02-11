@@ -29,8 +29,6 @@ export interface Material {
   id: string;
   projectId: string;
   type: string;
-  fromKm: string;
-  toKm: string;
   meters: number;
   date: string;
   time: string;

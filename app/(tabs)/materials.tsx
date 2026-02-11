@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import {
   Card,
   Text,
@@ -27,8 +27,6 @@ import {
 import type { Material, Project } from '../../src/types';
 import { MATERIAL_TYPES } from '../../src/utils/constants';
 import { getTodayISO, getCurrentTime, formatNumber } from '../../src/utils/formatters';
-import { calculateDistance, parseKilometer } from '../../src/utils/calculations';
-import { validateKilometerFormat } from '../../src/utils/validators';
 
 export default function MaterialsScreen() {
   const { t } = useTranslation();
@@ -42,9 +40,7 @@ export default function MaterialsScreen() {
 
   // Form state
   const [formType, setFormType] = useState('Fugenmasse');
-  const [formFromKm, setFormFromKm] = useState('');
-  const [formToKm, setFormToKm] = useState('');
-  const [formMeters, setFormMeters] = useState('0');
+  const [formMeters, setFormMeters] = useState('');
   const [formTime, setFormTime] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [typeMenuVisible, setTypeMenuVisible] = useState(false);
@@ -73,19 +69,9 @@ export default function MaterialsScreen() {
     loadData();
   }, [loadData]);
 
-  // Auto-calculate meters when km changes
-  useEffect(() => {
-    if (validateKilometerFormat(formFromKm) && validateKilometerFormat(formToKm)) {
-      const dist = calculateDistance(formFromKm, formToKm);
-      setFormMeters(dist > 0 ? dist.toString() : '0');
-    }
-  }, [formFromKm, formToKm]);
-
   const resetForm = () => {
     setFormType('Fugenmasse');
-    setFormFromKm('');
-    setFormToKm('');
-    setFormMeters('0');
+    setFormMeters('');
     setFormTime(getCurrentTime());
     setFormNotes('');
     setEditingMaterial(null);
@@ -100,8 +86,6 @@ export default function MaterialsScreen() {
   const openEditModal = (material: Material) => {
     setEditingMaterial(material);
     setFormType(material.type);
-    setFormFromKm(material.fromKm);
-    setFormToKm(material.toKm);
     setFormMeters(material.meters.toString());
     setFormTime(material.time);
     setFormNotes(material.notes ?? '');
@@ -109,25 +93,28 @@ export default function MaterialsScreen() {
   };
 
   const handleSave = async () => {
-    if (!project) return;
-
-    if (!validateKilometerFormat(formFromKm) || !validateKilometerFormat(formToKm)) {
-      setSnackbar(t('materials.invalidKmFormat'));
+    if (!project) {
+      Alert.alert('Blad', 'Brak aktywnego projektu');
       return;
     }
 
-    const meters = parseFloat(formMeters);
+    if (!formType) {
+      Alert.alert('Brak typu', 'Wybierz typ materialu');
+      return;
+    }
+
+    const meters = parseFloat(formMeters.replace(',', '.'));
     if (isNaN(meters) || meters <= 0) {
-      setSnackbar(t('common.error'));
+      Alert.alert('Bledna ilosc', 'Podaj metry biezace (wieksza od 0)');
       return;
     }
 
     try {
+      console.log('Zapisuje material:', { type: formType, meters, time: formTime });
+
       if (editingMaterial) {
         await updateMaterial(editingMaterial.id, {
           type: formType,
-          fromKm: formFromKm,
-          toKm: formToKm,
           meters,
           notes: formNotes.trim() || undefined,
         });
@@ -135,8 +122,6 @@ export default function MaterialsScreen() {
         await createMaterial({
           projectId: project.id,
           type: formType,
-          fromKm: formFromKm,
-          toKm: formToKm,
           meters,
           date: getTodayISO(),
           time: formTime,
@@ -147,9 +132,11 @@ export default function MaterialsScreen() {
       resetForm();
       await loadData();
       setSnackbar(t('common.success'));
+      console.log('Material zapisany');
     } catch (error) {
-      console.error('Error saving material:', error);
-      setSnackbar(t('common.error'));
+      console.error('Blad zapisu materialu:', error);
+      const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac';
+      Alert.alert('Blad zapisu', message);
     }
   };
 
@@ -166,6 +153,8 @@ export default function MaterialsScreen() {
             setSnackbar(t('common.success'));
           } catch (error) {
             console.error('Error deleting material:', error);
+            const message = error instanceof Error ? error.message : 'Nie udalo sie usunac';
+            Alert.alert('Blad', message);
           }
         },
       },
@@ -194,16 +183,9 @@ export default function MaterialsScreen() {
           </View>
         </View>
 
-        <View style={styles.kmRow}>
-          <Text variant="bodyMedium" style={styles.kmText}>
-            {item.fromKm}
-          </Text>
-          <MaterialCommunityIcons name="arrow-right" size={16} color="#757575" />
-          <Text variant="bodyMedium" style={styles.kmText}>
-            {item.toKm}
-          </Text>
+        <View style={styles.metersRow}>
           <Text variant="titleMedium" style={styles.metersText}>
-            {item.meters} m
+            {formatNumber(item.meters, 1)} MB
           </Text>
         </View>
 
@@ -247,7 +229,7 @@ export default function MaterialsScreen() {
         <View style={styles.summaryRow}>
           {Object.entries(summary).map(([type, meters]) => (
             <Text key={type} variant="bodySmall" style={styles.summaryItem}>
-              {type}: {formatNumber(meters, 0)} m
+              {type}: {formatNumber(meters, 0)} MB
             </Text>
           ))}
           {Object.keys(summary).length === 0 && (
@@ -297,39 +279,15 @@ export default function MaterialsScreen() {
             ))}
           </Menu>
 
-          <View style={styles.kmInputRow}>
-            <TextInput
-              label={t('materials.fromKm')}
-              value={formFromKm}
-              onChangeText={setFormFromKm}
-              placeholder="0+000"
-              style={[styles.input, styles.kmInput]}
-              mode="outlined"
-            />
-            <MaterialCommunityIcons
-              name="arrow-right"
-              size={24}
-              color="#757575"
-              style={styles.arrowIcon}
-            />
-            <TextInput
-              label={t('materials.toKm')}
-              value={formToKm}
-              onChangeText={setFormToKm}
-              placeholder="0+450"
-              style={[styles.input, styles.kmInput]}
-              mode="outlined"
-            />
-          </View>
-
           <TextInput
-            label={t('materials.meters')}
+            label="Metry biezace (MB)"
             value={formMeters}
             onChangeText={setFormMeters}
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             style={styles.input}
             mode="outlined"
-            disabled
+            placeholder="np. 120.5"
+            right={<TextInput.Affix text="MB" />}
           />
 
           <TextInput
@@ -385,14 +343,10 @@ const styles = StyleSheet.create({
   },
   typeChip: { borderRadius: 8 },
   cardActions: { flexDirection: 'row' },
-  kmRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  metersRow: {
     marginTop: 8,
   },
-  kmText: { color: '#424242', fontWeight: '600' },
-  metersText: { color: '#2196F3', fontWeight: 'bold', marginLeft: 'auto' },
+  metersText: { color: '#2196F3', fontWeight: 'bold' },
   timeText: { color: '#757575', marginTop: 4 },
   notes: { color: '#9E9E9E', marginTop: 4, fontStyle: 'italic' },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 16 },
@@ -422,9 +376,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontWeight: 'bold', marginBottom: 16, color: '#212121' },
   input: { marginBottom: 12, backgroundColor: '#FFFFFF' },
-  kmInputRow: { flexDirection: 'row', alignItems: 'center' },
-  kmInput: { flex: 1 },
-  arrowIcon: { marginHorizontal: 8, marginBottom: 12 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 },
   modalButton: { minWidth: 100 },
 });

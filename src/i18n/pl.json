@@ -132,6 +132,8 @@
     "yesterday": "Wczoraj",
     "thisWeek": "Ten tydzień",
     "custom": "Niestandardowy",
+    "dateFrom": "Od",
+    "dateTo": "Do",
     "include": "Uwzględnij",
     "includeAsphalt": "Dostawy asfaltu",
     "includeMaterials": "Materiały",
@@ -140,7 +142,12 @@
     "generatePdf": "Generuj PDF",
     "generateExcel": "Generuj Excel",
     "sendWhatsapp": "Wyślij na WhatsApp",
-    "preview": "Podgląd"
+    "preview": "Podgląd",
+    "generating": "Generowanie raportu...",
+    "error": "Błąd eksportu",
+    "noSectionSelected": "Wybierz przynajmniej jedną sekcję do eksportu",
+    "noProject": "Brak aktywnego projektu. Ustaw projekt w Ustawieniach.",
+    "exportError": "Nie udało się wygenerować raportu. Spróbuj ponownie."
   },
   "settings": {
     "title": "Ustawienia",
