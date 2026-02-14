@@ -149,3 +149,11 @@ export type TripPurpose =
   | 'Transport pracowników'
   | 'Wizyta u klienta'
   | 'Inne';
+
+export interface ExportOptions {
+  includeAsphalt: boolean;
+  includeMaterials: boolean;
+  includeHours: boolean;
+  includeVehicle: boolean;
+  includeMaterialUsage: boolean;
+}

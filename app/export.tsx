@@ -28,14 +28,15 @@ export default function ExportScreen() {
   const [customTo, setCustomTo] = useState(getTodayISO());
   const [includeAsphalt, setIncludeAsphalt] = useState(true);
   const [includeMaterials, setIncludeMaterials] = useState(true);
+  const [includeMaterialUsage, setIncludeMaterialUsage] = useState(true);
   const [includeHours, setIncludeHours] = useState(true);
   const [includeVehicle, setIncludeVehicle] = useState(true);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState('');
 
-  const options = { includeAsphalt, includeMaterials, includeHours, includeVehicle };
+  const options = { includeAsphalt, includeMaterials, includeMaterialUsage, includeHours, includeVehicle };
 
-  const hasAnySection = includeAsphalt || includeMaterials || includeHours || includeVehicle;
+  const hasAnySection = includeAsphalt || includeMaterials || includeMaterialUsage || includeHours || includeVehicle;
 
   const runExport = async (exportFn: () => Promise<void>, label: string) => {
     if (!hasAnySection) {
@@ -147,6 +148,12 @@ export default function ExportScreen() {
               label={t('export.includeMaterials')}
               status={includeMaterials ? 'checked' : 'unchecked'}
               onPress={() => setIncludeMaterials(!includeMaterials)}
+              color="#FF9800"
+            />
+            <Checkbox.Item
+              label={t('export.includeMaterialUsage')}
+              status={includeMaterialUsage ? 'checked' : 'unchecked'}
+              onPress={() => setIncludeMaterialUsage(!includeMaterialUsage)}
               color="#FF9800"
             />
             <Checkbox.Item
