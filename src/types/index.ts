@@ -87,6 +87,31 @@ export interface Trip {
   createdAt: string;
 }
 
+export interface MaterialCatalog {
+  id: string;
+  name: string;
+  unit: string;
+  pricePerUnit: number;
+  density?: number;
+  category?: string;
+  createdAt: string;
+}
+
+export interface MaterialUsage {
+  id: string;
+  projectId: string;
+  materialId: string;
+  date: string;
+  inputQuantity: number;
+  inputUnit: string;
+  thicknessCm?: number;
+  finalQuantity: number;
+  cost: number;
+  pricePerUnitAtTime: number;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface DailyReport {
   projectId: string;
   projectName: string;

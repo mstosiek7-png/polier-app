@@ -8,6 +8,8 @@ import type {
   WorkerHours,
   Vehicle,
   Trip,
+  MaterialCatalog,
+  MaterialUsage,
 } from '../types';
 
 let db: SQLite.SQLiteDatabase | null = null;
@@ -122,10 +124,38 @@ export async function initializeDatabase(): Promise<void> {
       FOREIGN KEY (project_id) REFERENCES projects(id)
     );
 
+    CREATE TABLE IF NOT EXISTS materials_catalog (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      unit TEXT NOT NULL,
+      price_per_unit REAL NOT NULL,
+      density REAL,
+      category TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS material_usage (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      material_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      input_quantity REAL NOT NULL,
+      input_unit TEXT NOT NULL,
+      thickness_cm REAL,
+      final_quantity REAL NOT NULL,
+      cost REAL NOT NULL,
+      price_per_unit_at_time REAL NOT NULL,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (project_id) REFERENCES projects(id),
+      FOREIGN KEY (material_id) REFERENCES materials_catalog(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_asphalt_project_date ON asphalt_deliveries(project_id, date);
     CREATE INDEX IF NOT EXISTS idx_materials_project_date ON materials(project_id, date);
     CREATE INDEX IF NOT EXISTS idx_hours_project_date ON worker_hours(project_id, date);
     CREATE INDEX IF NOT EXISTS idx_trips_project_date ON trips(project_id, date);
+    CREATE INDEX IF NOT EXISTS idx_material_usage_project_date ON material_usage(project_id, date);
   `);
 }
 
@@ -661,6 +691,130 @@ export async function seedDatabase(): Promise<void> {
   );
 }
 
+// ==================== MATERIALS CATALOG ====================
+
+export async function getMaterialsCatalog(): Promise<MaterialCatalog[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; name: string; unit: string; price_per_unit: number;
+    density: number | null; category: string | null; created_at: string;
+  }>('SELECT * FROM materials_catalog ORDER BY name');
+  return rows.map(mapMaterialCatalog);
+}
+
+export async function addMaterialCatalog(material: Omit<MaterialCatalog, 'id' | 'createdAt'>): Promise<MaterialCatalog> {
+  const database = await getDatabase();
+  const id = Crypto.randomUUID();
+  const now = new Date().toISOString();
+  await database.runAsync(
+    'INSERT INTO materials_catalog (id, name, unit, price_per_unit, density, category, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [id, material.name, material.unit, material.pricePerUnit, material.density ?? null, material.category ?? null, now]
+  );
+  return { ...material, id, createdAt: now };
+}
+
+export async function updateMaterialCatalog(id: string, updates: Partial<MaterialCatalog>): Promise<void> {
+  const database = await getDatabase();
+  const fields: string[] = [];
+  const values: (string | number | null)[] = [];
+
+  if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+  if (updates.unit !== undefined) { fields.push('unit = ?'); values.push(updates.unit); }
+  if (updates.pricePerUnit !== undefined) { fields.push('price_per_unit = ?'); values.push(updates.pricePerUnit); }
+  if (updates.density !== undefined) { fields.push('density = ?'); values.push(updates.density ?? null); }
+  if (updates.category !== undefined) { fields.push('category = ?'); values.push(updates.category ?? null); }
+
+  if (fields.length > 0) {
+    values.push(id);
+    await database.runAsync(`UPDATE materials_catalog SET ${fields.join(', ')} WHERE id = ?`, values);
+  }
+}
+
+export async function deleteMaterialCatalog(id: string): Promise<void> {
+  const database = await getDatabase();
+  const usageCount = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM material_usage WHERE material_id = ?',
+    [id]
+  );
+  if (usageCount && usageCount.count > 0) {
+    throw new Error('Nie można usunąć materiału, ponieważ istnieją powiązane użycia');
+  }
+  await database.runAsync('DELETE FROM materials_catalog WHERE id = ?', [id]);
+}
+
+// ==================== MATERIAL USAGE ====================
+
+export async function getMaterialUsageByProjectAndDate(projectId: string, date: string): Promise<MaterialUsage[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{
+    id: string; project_id: string; material_id: string; date: string;
+    input_quantity: number; input_unit: string; thickness_cm: number | null;
+    final_quantity: number; cost: number; price_per_unit_at_time: number;
+    notes: string | null; created_at: string; name: string;
+  }>(`
+    SELECT mu.*, mc.name 
+    FROM material_usage mu 
+    JOIN materials_catalog mc ON mu.material_id = mc.id 
+    WHERE mu.project_id = ? AND mu.date = ? 
+    ORDER BY mu.created_at
+  `, [projectId, date]);
+  return rows.map(mapMaterialUsage);
+}
+
+export async function addMaterialUsage(usage: Omit<MaterialUsage, 'id' | 'createdAt'>): Promise<MaterialUsage> {
+  const database = await getDatabase();
+  const id = Crypto.randomUUID();
+  const now = new Date().toISOString();
+  await database.runAsync(
+    `INSERT INTO material_usage (id, project_id, material_id, date, input_quantity, input_unit, thickness_cm, final_quantity, cost, price_per_unit_at_time, notes, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, usage.projectId, usage.materialId, usage.date, usage.inputQuantity, usage.inputUnit,
+     usage.thicknessCm ?? null, usage.finalQuantity, usage.cost, usage.pricePerUnitAtTime,
+     usage.notes ?? null, now]
+  );
+  return { ...usage, id, createdAt: now };
+}
+
+export async function deleteMaterialUsage(id: string): Promise<void> {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM material_usage WHERE id = ?', [id]);
+}
+
+export async function getMaterialUsageForExport(
+  startDate: string, 
+  endDate: string, 
+  projectId?: string
+): Promise<MaterialUsage[]> {
+  const database = await getDatabase();
+  let query = `
+    SELECT mu.*, mc.name, p.name as project_name
+    FROM material_usage mu 
+    JOIN materials_catalog mc ON mu.material_id = mc.id 
+    JOIN projects p ON mu.project_id = p.id 
+    WHERE mu.date BETWEEN ? AND ?
+  `;
+  const params: (string | number)[] = [startDate, endDate];
+  
+  if (projectId) {
+    query += ' AND mu.project_id = ?';
+    params.push(projectId);
+  }
+  
+  query += ' ORDER BY mu.date, mu.created_at';
+  
+  const rows = await database.getAllAsync<{
+    id: string; project_id: string; material_id: string; date: string;
+    input_quantity: number; input_unit: string; thickness_cm: number | null;
+    final_quantity: number; cost: number; price_per_unit_at_time: number;
+    notes: string | null; created_at: string; name: string; project_name: string;
+  }>(query, params);
+  
+  return rows.map(row => ({
+    ...mapMaterialUsage(row),
+    projectName: row.project_name,
+  }));
+}
+
 // ==================== MAPPERS ====================
 
 function mapProject(row: {
@@ -792,6 +946,43 @@ function mapTrip(row: {
     endOdometer: row.end_odometer,
     distance: row.distance,
     purpose: row.purpose ?? '',
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+function mapMaterialCatalog(row: {
+  id: string; name: string; unit: string; price_per_unit: number;
+  density: number | null; category: string | null; created_at: string;
+}): MaterialCatalog {
+  return {
+    id: row.id,
+    name: row.name,
+    unit: row.unit,
+    pricePerUnit: row.price_per_unit,
+    density: row.density ?? undefined,
+    category: row.category ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+function mapMaterialUsage(row: {
+  id: string; project_id: string; material_id: string; date: string;
+  input_quantity: number; input_unit: string; thickness_cm: number | null;
+  final_quantity: number; cost: number; price_per_unit_at_time: number;
+  notes: string | null; created_at: string; name?: string; project_name?: string;
+}): MaterialUsage {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    materialId: row.material_id,
+    date: row.date,
+    inputQuantity: row.input_quantity,
+    inputUnit: row.input_unit,
+    thicknessCm: row.thickness_cm ?? undefined,
+    finalQuantity: row.final_quantity,
+    cost: row.cost,
+    pricePerUnitAtTime: row.price_per_unit_at_time,
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
   };
