@@ -815,6 +815,15 @@ export async function getMaterialUsageForExport(
   }));
 }
 
+export async function getMaterialCostSummary(projectId: string, date: string): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.getFirstAsync<{ total: number | null }>(
+    `SELECT SUM(cost) as total FROM material_usage WHERE project_id = ? AND date = ?`,
+    [projectId, date]
+  );
+  return result?.total ?? 0;
+}
+
 // ==================== MAPPERS ====================
 
 function mapProject(row: {

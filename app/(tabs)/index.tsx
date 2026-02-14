@@ -11,6 +11,7 @@ import {
   getMaterialsSummary,
   getTotalHours,
   getTotalKm,
+  getMaterialCostSummary,
 } from '../../src/services/database';
 import type { Project } from '../../src/types';
 import { getTodayISO, formatNumber } from '../../src/utils/formatters';
@@ -21,6 +22,7 @@ interface DashboardStats {
   workersCount: number;
   hours: number;
   km: number;
+  materialCost: number;
 }
 
 export default function DashboardScreen() {
@@ -33,6 +35,7 @@ export default function DashboardScreen() {
     workersCount: 0,
     hours: 0,
     km: 0,
+    materialCost: 0,
   });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -43,11 +46,12 @@ export default function DashboardScreen() {
 
       if (activeProject) {
         const today = getTodayISO();
-        const [tons, materialsSummary, hoursData, km] = await Promise.all([
+        const [tons, materialsSummary, hoursData, km, materialCost] = await Promise.all([
           getTotalTons(activeProject.id, today),
           getMaterialsSummary(activeProject.id, today),
           getTotalHours(activeProject.id, today),
           getTotalKm(activeProject.id, today),
+          getMaterialCostSummary(activeProject.id, today),
         ]);
 
         const materialsTotal = Object.values(materialsSummary).reduce(
@@ -61,6 +65,7 @@ export default function DashboardScreen() {
           workersCount: hoursData.workersCount,
           hours: hoursData.totalHours,
           km,
+          materialCost,
         });
       }
     } catch (error) {
@@ -132,6 +137,15 @@ export default function DashboardScreen() {
       screen: '/export',
       info: '',
       color: '#795548',
+    },
+    {
+      id: 7,
+      title: 'Kalkulator materiałów',
+      subtitle: 'Zużycie materiałów',
+      icon: 'calculator-variant' as const,
+      screen: '/(tabs)/materials-calculator',
+      info: `${t('dashboard.today', 'Dzisiaj')}: ${formatNumber(stats.materialCost)} zł`,
+      color: '#FF5722',
     },
   ];
 
