@@ -1,9 +1,22 @@
 import * as Print from 'expo-print';
 import type { ReportData, ExportOptions } from './exportService';
 import { formatNumber, formatDate } from '../utils/formatters';
+import { fetchMaterialUsageData, getDateRange } from './exportService';
 
-export function generatePdfHtml(data: ReportData, options: ExportOptions): string {
+export async function generatePdfHtml(
+  data: ReportData, 
+  options: ExportOptions,
+  projectId?: string,
+  materialUsage?: any[]
+): Promise<string> {
   let sectionsHtml = '';
+  
+  // If material usage not provided but materials are included, fetch them
+  let materialUsageData = materialUsage;
+  if (options.includeMaterials && !materialUsageData && projectId) {
+    const { from, to } = getDateRange('custom', '', '');
+    materialUsageData = await fetchMaterialUsageData(from, to, projectId);
+  }
 
   if (options.includeAsphalt && data.asphaltDeliveries.length > 0) {
     const rows = data.asphaltDeliveries.map(d => `
@@ -79,6 +92,48 @@ export function generatePdfHtml(data: ReportData, options: ExportOptions): strin
     `;
   }
 
+  // Material Usage section
+  if (options.includeMaterials && materialUsageData && materialUsageData.length > 0) {
+    const rows = materialUsageData.map((mu: any) => `
+      <tr>
+        <td>${formatDate(mu.date)}</td>
+        <td>${mu.projectName || data.projectName}</td>
+        <td>${mu.name || ''}</td>
+        <td style="text-align:right">${formatNumber(mu.finalQuantity, 2)}</td>
+        <td>${mu.inputUnit}</td>
+        <td style="text-align:right">${formatNumber(mu.cost, 2)} zł</td>
+      </tr>
+    `).join('');
+    
+    const totalCost = materialUsageData.reduce((sum: number, mu: any) => sum + mu.cost, 0);
+    const totalQuantity = materialUsageData.reduce((sum: number, mu: any) => sum + mu.finalQuantity, 0);
+    
+    sectionsHtml += `
+      <div class="section">
+        <div class="section-title">3. Materiały (zużycie)</div>
+        <table>
+          <thead><tr>
+            <th>Data</th>
+            <th>Projekt</th>
+            <th>Materiał</th>
+            <th style="text-align:right">Ilość</th>
+            <th>Jednostka</th>
+            <th style="text-align:right">Koszt</th>
+          </tr></thead>
+          <tbody>
+            ${rows}
+            <tr class="total-row">
+              <td colspan="3"><strong>SUMA</strong></td>
+              <td style="text-align:right"><strong>${formatNumber(totalQuantity, 2)}</strong></td>
+              <td></td>
+              <td style="text-align:right"><strong>${formatNumber(totalCost, 2)} zł</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   if (options.includeHours && data.workerHours.length > 0) {
     const rows = data.workerHours.map(wh => `
       <tr>
@@ -95,7 +150,7 @@ export function generatePdfHtml(data: ReportData, options: ExportOptions): strin
 
     sectionsHtml += `
       <div class="section">
-        <div class="section-title">3. Godziny pracownikow</div>
+        <div class="section-title">4. Godziny pracownikow</div>
         <table>
           <thead><tr>
             <th>Pracownik</th>
@@ -136,7 +191,7 @@ export function generatePdfHtml(data: ReportData, options: ExportOptions): strin
 
     sectionsHtml += `
       <div class="section">
-        <div class="section-title">4. Kilometrowka busa${data.vehicleName ? ` - ${data.vehicleName}` : ''}</div>
+        <div class="section-title">5. Kilometrowka busa${data.vehicleName ? ` - ${data.vehicleName}` : ''}</div>
         <table>
           <thead><tr>
             <th>Data</th>

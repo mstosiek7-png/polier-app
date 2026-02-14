@@ -13,6 +13,7 @@ import {
   getTripsRange,
   getTotalKmRange,
   getActiveWorkers,
+  getMaterialUsageForExport,
 } from './database';
 import { generatePdfHtml, generatePdfFile } from './pdfGenerator';
 import { formatWhatsAppMessage, shareViaWhatsApp } from './whatsappFormatter';
@@ -49,6 +50,7 @@ export interface ReportData {
   asphaltTotal: number;
   materials: Material[];
   materialsSummary: Record<string, number>;
+  materialUsage?: any[];
   workerHours: WorkerHourRow[];
   workersCount: number;
   totalHours: number;
@@ -158,14 +160,34 @@ export async function exportPdf(
   dateTo: string,
   options: ExportOptions,
 ): Promise<void> {
-  const data = await fetchReportData(dateFrom, dateTo, options);
-  const html = generatePdfHtml(data, options);
+  const project = await getActiveProject();
+  if (!project) throw new Error('NO_ACTIVE_PROJECT');
+  
+  const projectId = project.id;
+  
+  const [data, materialUsage] = await Promise.all([
+    fetchReportData(dateFrom, dateTo, options),
+    options.includeMaterials ? fetchMaterialUsageData(dateFrom, dateTo, projectId) : Promise.resolve([]),
+  ]);
+  
+  const html = await generatePdfHtml(data, options, projectId, materialUsage);
   const uri = await generatePdfFile(html);
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
     dialogTitle: 'Eksport PDF',
     UTI: 'com.adobe.pdf',
   });
+}
+
+// ==================== MATERIAL USAGE EXPORT ====================
+
+export async function fetchMaterialUsageData(
+  dateFrom: string,
+  dateTo: string,
+  projectId?: string
+): Promise<any[]> {
+  const materialUsage = await getMaterialUsageForExport(dateFrom, dateTo, projectId);
+  return materialUsage;
 }
 
 // ==================== EXCEL EXPORT ====================
@@ -175,7 +197,16 @@ export async function exportExcel(
   dateTo: string,
   options: ExportOptions,
 ): Promise<void> {
-  const data = await fetchReportData(dateFrom, dateTo, options);
+  const project = await getActiveProject();
+  if (!project) throw new Error('NO_ACTIVE_PROJECT');
+  
+  const projectId = project.id;
+  
+  const [data, materialUsage] = await Promise.all([
+    fetchReportData(dateFrom, dateTo, options),
+    options.includeMaterials ? fetchMaterialUsageData(dateFrom, dateTo, projectId) : Promise.resolve([]),
+  ]);
+  
   const wb = XLSX.utils.book_new();
 
   if (options.includeAsphalt && data.asphaltDeliveries.length > 0) {
@@ -275,6 +306,42 @@ export async function exportExcel(
     const ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [{ wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Kilometrowka');
+  }
+
+  // Material Usage sheet
+  if (options.includeMaterials && materialUsage.length > 0) {
+    const rows = materialUsage.map((mu: any) => ({
+      'Data': mu.date,
+      'Projekt': mu.projectName || data.projectName,
+      'Materiał': mu.name || '',
+      'Ilość': mu.finalQuantity,
+      'Jednostka': mu.inputUnit,
+      'Koszt': mu.cost,
+      'Uwagi': mu.notes || '',
+    }));
+    
+    // Add summary row
+    const totalCost = materialUsage.reduce((sum: number, mu: any) => sum + mu.cost, 0);
+    const totalQuantity = materialUsage.reduce((sum: number, mu: any) => sum + mu.finalQuantity, 0);
+    
+    rows.push({
+      'Data': 'SUMA',
+      'Projekt': '',
+      'Materiał': '',
+      'Ilość': totalQuantity,
+      'Jednostka': '',
+      'Koszt': totalCost,
+      'Uwagi': '',
+    });
+    
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Materiały (zużycie)');
+  }
+
+  // Check if workbook has any sheets
+  if (wb.SheetNames.length === 0) {
+    throw new Error('Nie wybrano żadnych sekcji do eksportu');
   }
 
   // Write to base64 and save

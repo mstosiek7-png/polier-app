@@ -37,6 +37,11 @@ export interface Material {
   createdAt: string;
 }
 
+export interface MaterialExportItem extends Material {
+  unit?: string;
+  cost?: number;
+}
+
 export interface Worker {
   id: string;
   firstName: string;
