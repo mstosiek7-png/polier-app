@@ -16,6 +16,7 @@ import {
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   getAllProjects,
   createProject,
@@ -52,6 +53,7 @@ export default function SettingsScreen() {
   const [newVehicleModel, setNewVehicleModel] = useState('');
   const [newVehicleReg, setNewVehicleReg] = useState('');
   const [newVehicleOdo, setNewVehicleOdo] = useState('');
+  const router = useRouter();
 
   const loadData = useCallback(async () => {
     try {
@@ -289,6 +291,30 @@ export default function SettingsScreen() {
                 style={styles.listItem}
               />
             ))}
+          </Card.Content>
+        </Card>
+
+        {/* Materials Catalog */}
+        <Card mode="elevated" style={styles.card}>
+          <Card.Content>
+            <View style={styles.sectionHeader}>
+              <Text variant="titleMedium" style={styles.sectionTitle}>
+                Materiały
+              </Text>
+              <IconButton
+                icon="arrow-right"
+                iconColor="#FF9800"
+                size={20}
+                onPress={() => router.push('/materials-catalog')}
+              />
+            </View>
+            <List.Item
+              title="Zarządzaj katalogiem materiałów"
+              description="Dodawaj, edytuj i usuwaj materiały"
+              left={(props) => <List.Icon {...props} icon="package-variant" color="#FF9800" />}
+              style={styles.listItem}
+              onPress={() => router.push('/materials-catalog')}
+            />
           </Card.Content>
         </Card>
 
