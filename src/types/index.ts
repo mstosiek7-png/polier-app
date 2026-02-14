@@ -110,6 +110,7 @@ export interface MaterialUsage {
   pricePerUnitAtTime: number;
   notes?: string;
   createdAt: string;
+  name?: string;
 }
 
 export interface DailyReport {
