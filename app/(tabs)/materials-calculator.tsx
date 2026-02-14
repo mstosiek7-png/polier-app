@@ -16,14 +16,16 @@ import {
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format, addDays, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { MaterialUsage, Project } from '../../src/types';
+import { MaterialUsage, Project, MaterialCatalog } from '../../src/types';
 import { 
   getAllProjects, 
   getMaterialUsageByProjectAndDate,
-  deleteMaterialUsage
+  deleteMaterialUsage,
+  getMaterialsCatalog,
+  addMaterialUsage
 } from '../../src/services/database';
 
 export default function MaterialsCalculatorScreen() {
@@ -32,9 +34,19 @@ export default function MaterialsCalculatorScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [entries, setEntries] = useState<MaterialUsage[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [materialsCatalog, setMaterialsCatalog] = useState<MaterialCatalog[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [snackbar, setSnackbar] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [materialMenuVisible, setMaterialMenuVisible] = useState(false);
+
+  // Form states
+  const [selectedMaterial, setSelectedMaterial] = useState<MaterialCatalog | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [thickness, setThickness] = useState('');
+  const [finalQuantity, setFinalQuantity] = useState(0);
+  const [cost, setCost] = useState(0);
+  const [notes, setNotes] = useState('');
 
   // Summary state
   const [summary, setSummary] = useState({
@@ -61,6 +73,20 @@ export default function MaterialsCalculatorScreen() {
     loadProjects();
   }, []);
 
+  // Load materials catalog on mount
+  useEffect(() => {
+    const loadCatalog = async () => {
+      try {
+        const catalog = await getMaterialsCatalog();
+        setMaterialsCatalog(catalog);
+      } catch (error) {
+        console.error('Error loading materials catalog:', error);
+        setSnackbar('Błąd ładowania katalogu materiałów');
+      }
+    };
+    loadCatalog();
+  }, []);
+
   // Load entries when project or date changes
   const loadEntries = useCallback(async () => {
     if (!selectedProject) return;
@@ -79,6 +105,51 @@ export default function MaterialsCalculatorScreen() {
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
+
+  // Calculate final quantity and cost based on input
+  useEffect(() => {
+    if (!selectedMaterial) {
+      setFinalQuantity(0);
+      setCost(0);
+      return;
+    }
+
+    const input = parseFloat(inputValue) || 0;
+    const thick = parseFloat(thickness) || 0;
+
+    let finalQty = 0;
+    let calculatedCost = 0;
+
+    switch (selectedMaterial.unit) {
+      case 't':
+        if (selectedMaterial.density) {
+          // Tonnage from surface and thickness
+          const surface = input;
+          const thicknessM = thick / 100; // cm to m
+          finalQty = surface * thicknessM * selectedMaterial.density;
+        } else {
+          // Direct tonnage
+          finalQty = input;
+        }
+        break;
+
+      case 'mb':
+        finalQty = input;
+        break;
+
+      case 'm²':
+        finalQty = input;
+        break;
+
+      default:
+        finalQty = input;
+    }
+
+    calculatedCost = finalQty * selectedMaterial.pricePerUnit;
+
+    setFinalQuantity(finalQty);
+    setCost(calculatedCost);
+  }, [inputValue, thickness, selectedMaterial]);
 
   const calculateSummary = (entries: MaterialUsage[]) => {
     const totalCost = entries.reduce((sum, entry) => sum + entry.cost, 0);
@@ -134,6 +205,67 @@ export default function MaterialsCalculatorScreen() {
   const getSelectedProjectName = () => {
     const project = projects.find(p => p.id === selectedProject);
     return project ? project.name : 'Wybierz projekt';
+  };
+
+  const getSelectedMaterialName = () => {
+    if (!selectedMaterial) return 'Wybierz materiał';
+    return `${selectedMaterial.name} (${selectedMaterial.unit} - ${selectedMaterial.pricePerUnit.toFixed(2)} zł/${selectedMaterial.unit})`;
+  };
+
+  const handleSaveEntry = async () => {
+    if (!selectedProject) {
+      setSnackbar('Wybierz projekt');
+      return;
+    }
+
+    if (!selectedMaterial) {
+      setSnackbar('Wybierz materiał');
+      return;
+    }
+
+    const inputQty = parseFloat(inputValue);
+    if (isNaN(inputQty) || inputQty <= 0) {
+      setSnackbar('Podaj prawidłową wartość');
+      return;
+    }
+
+    if (selectedMaterial.unit === 't' && selectedMaterial.density) {
+      const thick = parseFloat(thickness);
+      if (isNaN(thick) || thick <= 0) {
+        setSnackbar('Podaj prawidłową grubość');
+        return;
+      }
+    }
+
+    try {
+      await addMaterialUsage({
+        projectId: selectedProject,
+        materialId: selectedMaterial.id,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        inputQuantity: inputQty,
+        inputUnit: selectedMaterial.unit,
+        thicknessCm: selectedMaterial.unit === 't' && selectedMaterial.density ? parseFloat(thickness) : undefined,
+        finalQuantity: finalQuantity,
+        cost: cost,
+        pricePerUnitAtTime: selectedMaterial.pricePerUnit,
+        notes: notes.trim() || undefined
+      });
+
+      // Reset form
+      setSelectedMaterial(null);
+      setInputValue('');
+      setThickness('');
+      setNotes('');
+      setFinalQuantity(0);
+      setCost(0);
+      
+      setIsModalVisible(false);
+      await loadEntries();
+      setSnackbar('Pomyślnie dodano wpis');
+    } catch (error) {
+      console.error('Error adding material usage:', error);
+      setSnackbar('Błąd dodawania wpisu');
+    }
   };
 
   const renderEntry = ({ item }: { item: MaterialUsage }) => (
@@ -358,28 +490,169 @@ export default function MaterialsCalculatorScreen() {
         customSize={56}
       />
 
-      {/* Modal for adding new entry (to be implemented in Stage 4) */}
+      {/* Modal for adding new entry */}
       <Portal>
         <Modal
           visible={isModalVisible}
-          onDismiss={() => setIsModalVisible(false)}
+          onDismiss={() => {
+            setIsModalVisible(false);
+            setSelectedMaterial(null);
+            setInputValue('');
+            setThickness('');
+            setNotes('');
+          }}
           contentContainerStyle={styles.modal}
         >
-          <Text variant="titleLarge" style={styles.modalTitle}>
-            Dodaj nowy wpis materiału
-          </Text>
-          <Text variant="bodyMedium" style={styles.modalSubtitle}>
-            Funkcjonalność będzie dostępna w Etapie 4
-          </Text>
-          <View style={styles.modalActions}>
-            <Button 
-              mode="outlined" 
-              onPress={() => setIsModalVisible(false)}
-              style={styles.modalButton}
-            >
-              Zamknij
-            </Button>
-          </View>
+          <ScrollView>
+            <Text variant="titleLarge" style={styles.modalTitle}>
+              Dodaj nowy wpis materiałowy
+            </Text>
+
+            {/* Material selection */}
+            <View style={styles.selectorContainer}>
+              <Text variant="bodyMedium" style={styles.selectorLabel}>
+                Materiał:
+              </Text>
+              <Menu
+                visible={materialMenuVisible}
+                onDismiss={() => setMaterialMenuVisible(false)}
+                anchor={
+                  <Button
+                    mode="outlined"
+                    onPress={() => setMaterialMenuVisible(true)}
+                    style={styles.projectButton}
+                    contentStyle={styles.projectButtonContent}
+                    icon="chevron-down"
+                  >
+                    <Text numberOfLines={1} style={styles.projectButtonText}>
+                      {getSelectedMaterialName()}
+                    </Text>
+                  </Button>
+                }
+              >
+                {materialsCatalog.map(material => (
+                  <Menu.Item
+                    key={material.id}
+                    title={`${material.name} (${material.unit} - ${material.pricePerUnit.toFixed(2)} zł/${material.unit})`}
+                    onPress={() => {
+                      setSelectedMaterial(material);
+                      setMaterialMenuVisible(false);
+                      setInputValue('');
+                      setThickness('');
+                    }}
+                    titleStyle={material.id === selectedMaterial?.id ? styles.selectedProject : undefined}
+                  />
+                ))}
+              </Menu>
+            </View>
+
+            {selectedMaterial && (
+              <>
+                {/* Dynamic input fields based on material unit */}
+                {selectedMaterial.unit === 't' && selectedMaterial.density ? (
+                  <>
+                    <TextInput
+                      label="Powierzchnia (m²)"
+                      value={inputValue}
+                      onChangeText={setInputValue}
+                      keyboardType="numeric"
+                      style={styles.input}
+                      mode="outlined"
+                      placeholder="np. 100"
+                    />
+                    <TextInput
+                      label="Grubość (cm)"
+                      value={thickness}
+                      onChangeText={setThickness}
+                      keyboardType="numeric"
+                      style={styles.input}
+                      mode="outlined"
+                      placeholder="np. 4"
+                    />
+                    <Text variant="bodySmall" style={styles.infoText}>
+                      Gęstość: {selectedMaterial.density} t/m³
+                    </Text>
+                  </>
+                ) : selectedMaterial.unit === 'mb' ? (
+                  <TextInput
+                    label="Metry bieżące (mb)"
+                    value={inputValue}
+                    onChangeText={setInputValue}
+                    keyboardType="numeric"
+                    style={styles.input}
+                    mode="outlined"
+                    placeholder="np. 150"
+                  />
+                ) : selectedMaterial.unit === 'm²' ? (
+                  <TextInput
+                    label="Powierzchnia (m²)"
+                    value={inputValue}
+                    onChangeText={setInputValue}
+                    keyboardType="numeric"
+                    style={styles.input}
+                    mode="outlined"
+                    placeholder="np. 200"
+                  />
+                ) : (
+                  <TextInput
+                    label={`Ilość (${selectedMaterial.unit})`}
+                    value={inputValue}
+                    onChangeText={setInputValue}
+                    keyboardType="numeric"
+                    style={styles.input}
+                    mode="outlined"
+                    placeholder="np. 50"
+                  />
+                )}
+
+                {/* Calculations preview */}
+                <View style={styles.calculationPreview}>
+                  <Text variant="bodyMedium" style={styles.calcText}>
+                    Finalna ilość: {finalQuantity.toFixed(2)} {selectedMaterial.unit}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.calcText}>
+                    Koszt: {cost.toFixed(2)} zł
+                  </Text>
+                </View>
+
+                {/* Notes */}
+                <TextInput
+                  label="Uwagi (opcjonalnie)"
+                  value={notes}
+                  onChangeText={setNotes}
+                  style={styles.input}
+                  mode="outlined"
+                  multiline
+                  numberOfLines={3}
+                />
+              </>
+            )}
+
+            <View style={styles.modalActions}>
+              <Button 
+                mode="outlined" 
+                onPress={() => {
+                  setIsModalVisible(false);
+                  setSelectedMaterial(null);
+                  setInputValue('');
+                  setThickness('');
+                  setNotes('');
+                }}
+                style={styles.modalButton}
+              >
+                Anuluj
+              </Button>
+              <Button 
+                mode="contained" 
+                onPress={handleSaveEntry}
+                style={styles.modalButton}
+                buttonColor="#FF9800"
+                disabled={!selectedMaterial || !inputValue || finalQuantity === 0}
+              >
+                Zapisz
+              </Button>
+            </View>
+          </ScrollView>
         </Modal>
       </Portal>
 
@@ -601,19 +874,36 @@ const styles = StyleSheet.create({
     margin: 20,
     padding: 20,
     borderRadius: 16,
+    maxHeight: '80%',
   },
   modalTitle: {
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 16,
     color: '#212121',
   },
-  modalSubtitle: {
+  input: {
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  infoText: {
     color: '#757575',
-    marginBottom: 24,
+    marginBottom: 12,
+  },
+  calculationPreview: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  calcText: {
+    color: '#212121',
+    marginBottom: 4,
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 16,
   },
   modalButton: {
     minWidth: 100,
