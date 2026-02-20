@@ -162,7 +162,7 @@ export default function MaterialsScreen() {
   };
 
   const renderMaterialCard = ({ item }: { item: Material }) => (
-    <Card mode="outlined" style={styles.materialCard}>
+    <Card mode="elevated" style={styles.materialCard}>
       <Card.Content>
         <View style={styles.cardHeader}>
           <Chip
@@ -328,29 +328,37 @@ export default function MaterialsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  listContent: { padding: 16, paddingBottom: 160 },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  listContent: { padding: 20, paddingBottom: 160 },
   materialCard: {
     marginBottom: 12,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderColor: '#E0E0E0',
+    borderRadius: 16,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  typeChip: { borderRadius: 8 },
+  typeChip: { borderRadius: 10 },
   cardActions: { flexDirection: 'row' },
   metersRow: {
-    marginTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F1F3',
   },
   metersText: { color: '#2196F3', fontWeight: 'bold' },
-  timeText: { color: '#757575', marginTop: 4 },
-  notes: { color: '#9E9E9E', marginTop: 4, fontStyle: 'italic' },
+  timeText: { color: '#6B7280', marginTop: 4 },
+  notes: { color: '#9CA3AF', marginTop: 6, fontStyle: 'italic', fontSize: 12 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 16 },
-  emptyText: { color: '#BDBDBD' },
+  emptyText: { color: '#9CA3AF', fontSize: 15 },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -358,24 +366,39 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: '#F0F1F3',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 8,
   },
-  footerLabel: { color: '#757575', marginBottom: 4 },
+  footerLabel: { color: '#1A1A2E', fontWeight: '700', marginBottom: 6 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   summaryItem: { color: '#2196F3', fontWeight: '600' },
-  fab: { position: 'absolute', right: 16, bottom: 80, backgroundColor: '#FF9800', borderRadius: 16 },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 84,
+    backgroundColor: '#FF9800',
+    borderRadius: 16,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,
-    padding: 20,
-    borderRadius: 16,
+    padding: 24,
+    borderRadius: 20,
     maxHeight: '85%',
   },
-  modalTitle: { fontWeight: 'bold', marginBottom: 16, color: '#212121' },
+  modalTitle: { fontWeight: '700', marginBottom: 20, color: '#1A1A2E' },
   input: { marginBottom: 12, backgroundColor: '#FFFFFF' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 },
-  modalButton: { minWidth: 100 },
+  modalButton: { minWidth: 100, borderRadius: 12 },
 });

@@ -240,7 +240,7 @@ export default function HoursScreen() {
   };
 
   const renderWorkerCard = ({ item }: { item: WorkerWithHours }) => (
-    <Card mode="outlined" style={styles.workerCard}>
+    <Card mode="elevated" style={styles.workerCard}>
       <Card.Content>
         <View style={styles.workerHeader}>
           <View style={styles.workerHeaderLeft}>
@@ -489,32 +489,42 @@ export default function HoursScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
   bulkPanel: {
-    margin: 16,
+    margin: 20,
     marginBottom: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   bulkHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  bulkTitle: { fontWeight: '600' },
+  bulkTitle: { fontWeight: '700', color: '#1A1A2E' },
   bulkTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   bulkInput: { flex: 1, backgroundColor: '#FFFFFF' },
-  applyButton: { marginTop: 6 },
-  listContent: { padding: 16, paddingBottom: 100 },
+  applyButton: { marginTop: 6, borderRadius: 12 },
+  listContent: { padding: 20, paddingBottom: 100 },
   workerCard: {
-    marginBottom: 8,
+    marginBottom: 10,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderColor: '#E0E0E0',
+    borderRadius: 16,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   workerHeader: {
     flexDirection: 'row',
@@ -526,20 +536,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  workerName: { fontWeight: '600', color: '#212121' },
+  workerName: { fontWeight: '600', color: '#1A1A2E' },
   hoursRow: {
     flexDirection: 'row',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    borderTopColor: '#F0F1F3',
   },
   hourItem: { flex: 1, alignItems: 'center' },
-  hourLabel: { color: '#9E9E9E', marginBottom: 2 },
-  hourValue: { color: '#424242' },
-  totalValue: { color: '#4CAF50', fontWeight: 'bold' },
+  hourLabel: { color: '#9CA3AF', marginBottom: 2, fontSize: 11 },
+  hourValue: { color: '#1A1A2E' },
+  totalValue: { color: '#00897B', fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 16 },
-  emptyText: { color: '#BDBDBD' },
+  emptyText: { color: '#9CA3AF', fontSize: 15 },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -552,19 +562,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: '#F0F1F3',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 8,
   },
-  footerLabel: { color: '#757575' },
-  footerValue: { color: '#4CAF50', fontWeight: 'bold', fontSize: 16 },
+  footerLabel: { color: '#6B7280' },
+  footerValue: { color: '#00897B', fontWeight: 'bold', fontSize: 16 },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,
-    padding: 20,
-    borderRadius: 16,
+    padding: 24,
+    borderRadius: 20,
     maxHeight: '90%',
   },
-  modalTitle: { fontWeight: 'bold', marginBottom: 16, color: '#212121' },
+  modalTitle: { fontWeight: '700', marginBottom: 20, color: '#1A1A2E' },
   statusRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -580,8 +594,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     marginBottom: 8,
   },
-  calculatedLabel: { color: '#757575' },
-  calculatedValue: { color: '#4CAF50', fontWeight: 'bold' },
+  calculatedLabel: { color: '#6B7280' },
+  calculatedValue: { color: '#00897B', fontWeight: 'bold' },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -593,5 +607,5 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 8,
   },
-  modalButton: { minWidth: 100 },
+  modalButton: { minWidth: 100, borderRadius: 12 },
 });

@@ -188,7 +188,7 @@ export default function AsphaltScreen() {
   };
 
   const renderDeliveryCard = ({ item }: { item: AsphaltDelivery }) => (
-    <Card mode="outlined" style={styles.deliveryCard}>
+    <Card mode="elevated" style={styles.deliveryCard}>
       <Card.Content>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
@@ -415,17 +415,22 @@ export default function AsphaltScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F8F9FA',
   },
   listContent: {
-    padding: 16,
+    padding: 20,
     paddingBottom: 140,
   },
   deliveryCard: {
     marginBottom: 12,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderColor: '#E0E0E0',
+    borderRadius: 16,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -445,17 +450,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   timeText: {
-    color: '#757575',
+    color: '#6B7280',
     marginTop: 4,
   },
   mainInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F1F3',
   },
   asphaltClass: {
-    color: '#424242',
+    color: '#1A1A2E',
+    fontWeight: '500',
   },
   tons: {
     color: '#FF9800',
@@ -466,12 +475,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   driverText: {
-    color: '#757575',
+    color: '#6B7280',
+    fontSize: 13,
   },
   notes: {
-    color: '#9E9E9E',
-    marginTop: 4,
+    color: '#9CA3AF',
+    marginTop: 6,
     fontStyle: 'italic',
+    fontSize: 12,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -480,7 +491,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   emptyText: {
-    color: '#BDBDBD',
+    color: '#9CA3AF',
+    fontSize: 15,
   },
   footer: {
     position: 'absolute',
@@ -494,11 +506,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: '#F0F1F3',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 8,
   },
   footerLabel: {
-    color: '#757575',
+    color: '#6B7280',
   },
   footerValue: {
     color: '#FF9800',
@@ -506,22 +522,27 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    right: 16,
-    bottom: 80,
+    right: 20,
+    bottom: 84,
     backgroundColor: '#FF9800',
     borderRadius: 16,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,
-    padding: 20,
-    borderRadius: 16,
+    padding: 24,
+    borderRadius: 20,
     maxHeight: '85%',
   },
   modalTitle: {
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#212121',
+    fontWeight: '700',
+    marginBottom: 20,
+    color: '#1A1A2E',
   },
   input: {
     marginBottom: 12,
@@ -535,5 +556,6 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     minWidth: 100,
+    borderRadius: 12,
   },
 });

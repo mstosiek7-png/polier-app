@@ -228,16 +228,21 @@ export default function ExportScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  content: { padding: 16, paddingBottom: 32 },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  content: { padding: 20, paddingBottom: 32 },
   card: {
     marginBottom: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#212121',
+    fontWeight: '700',
+    color: '#1A1A2E',
     marginBottom: 8,
   },
   customDateContainer: {
@@ -255,7 +260,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   exportButton: {
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonContent: {
     height: 56,
@@ -266,6 +276,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#757575',
+    color: '#6B7280',
   },
 });

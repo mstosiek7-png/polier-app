@@ -455,12 +455,17 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  content: { padding: 16, paddingBottom: 32 },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  content: { padding: 20, paddingBottom: 32 },
   card: {
     marginBottom: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -468,8 +473,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#212121',
+    fontWeight: '700',
+    color: '#1A1A2E',
   },
   listItem: {
     paddingLeft: 0,
@@ -478,19 +483,19 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   aboutText: {
-    color: '#757575',
+    color: '#6B7280',
     marginTop: 4,
   },
   modal: {
     backgroundColor: '#FFFFFF',
     margin: 20,
-    padding: 20,
-    borderRadius: 16,
+    padding: 24,
+    borderRadius: 20,
   },
   modalTitle: {
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#212121',
+    fontWeight: '700',
+    marginBottom: 20,
+    color: '#1A1A2E',
   },
   input: {
     marginBottom: 12,

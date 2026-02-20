@@ -223,23 +223,28 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     backgroundColor: '#FF9800',
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 20,
+    paddingBottom: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   headerTextContainer: {
     flex: 1,
   },
   title: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   projectName: {
     color: '#FFFFFF',
@@ -255,7 +260,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 8,
+    padding: 10,
     paddingBottom: 32,
   },
   grid: {
@@ -270,7 +275,12 @@ const styles = StyleSheet.create({
     height: 180,
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   tileContent: {
     alignItems: 'center',
@@ -279,18 +289,18 @@ const styles = StyleSheet.create({
   },
   tileTitle: {
     marginTop: 12,
-    fontWeight: 'bold',
+    fontWeight: '700',
     textAlign: 'center',
-    color: '#212121',
+    color: '#1A1A2E',
   },
   tileSubtitle: {
     marginTop: 4,
-    color: '#666',
+    color: '#6B7280',
     textAlign: 'center',
   },
   tileInfo: {
     marginTop: 8,
-    color: '#999',
+    color: '#9CA3AF',
     fontSize: 12,
     textAlign: 'center',
   },
